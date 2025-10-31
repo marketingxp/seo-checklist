@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useItems, useCreateItem } from '@/features/items/api'
-import ItemList from '@/features/items/ItemList'
 import KanbanBoard from '@/features/items/KanbanBoard'
 import { getOrCreatePlatesExpressProject, seedPlatesExpressFromAudit } from '@/features/seo/seedFromAudit'
 import { supabase } from '@/lib/supabase'
@@ -9,17 +8,16 @@ export default function PlatesExpress() {
   const [projectId, setProjectId] = useState<string>('')
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const { data } = useItems(projectId)
+  const items = useMemo(() => Array.isArray(data) ? data : [], [data])
+  const create = useCreateItem(projectId)
+  const [title, setTitle] = useState('')
 
   useEffect(() => {
     let mounted = true
     ;(async () => {
-      try {
-        const p = await getOrCreatePlatesExpressProject()
-        if (!mounted) return
-        setProjectId(p.id)
-      } catch (e: any) {
-        setErr(e?.message ?? 'Failed to init project')
-      }
+      try { const p = await getOrCreatePlatesExpressProject(); if(mounted) setProjectId(p.id) }
+      catch (e: any) { setErr(e?.message ?? 'Failed to init project') }
     })()
     return () => { mounted = false }
   }, [])
@@ -27,16 +25,10 @@ export default function PlatesExpress() {
   useEffect(() => {
     if (!projectId) return
     const ch = supabase.channel(`items-${projectId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'items', filter: `project_id=eq.${projectId}` },
-        () => { location.reload() })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'items', filter: `project_id=eq.${projectId}` }, () => location.reload())
       .subscribe()
     return () => { supabase.removeChannel(ch) }
   }, [projectId])
-
-  const { data } = useItems(projectId)
-  const items = useMemo(() => Array.isArray(data) ? data : [], [data])
-  const create = useCreateItem(projectId)
-  const [title, setTitle] = useState('')
 
   const add = () => {
     const t = title.trim()
@@ -46,14 +38,9 @@ export default function PlatesExpress() {
   }
 
   const seed = async () => {
-    try {
-      setBusy(true); setErr(null)
-      const res = await seedPlatesExpressFromAudit(projectId)
-      if (res.inserted === 0) setErr('Tasks already present')
-      else setErr(null)
-    } catch (e: any) {
-      setErr(e?.message ?? 'Failed to seed tasks')
-    } finally { setBusy(false) }
+    try { setBusy(true); setErr(null); const res = await seedPlatesExpressFromAudit(projectId); if(res.inserted===0) setErr('Tasks already present') }
+    catch (e: any) { setErr(e?.message ?? 'Failed to seed tasks') }
+    finally { setBusy(false) }
   }
 
   return (
@@ -65,33 +52,14 @@ export default function PlatesExpress() {
         </div>
       </div>
       <div className="container">
-        {err && <div className="card card-pad" style={{borderColor:'rgba(239,68,68,.35)'}}>{err}</div>}
-        {!projectId && <div className="card card-pad">Loading…</div>}
-        {projectId && (
-          <>
-            <div className="card card-pad" style={{marginBottom:16}}>
-              <div className="row row-gap">
-                <input className="input" value={title} onChange={e=>setTitle(e.target.value)} placeholder="Add item…" onKeyDown={e=>e.key==='Enter' && add()} />
-                <button className="btn btn-primary" onClick={add}>Add</button>
-                <button className="btn" onClick={seed} disabled={busy}>{busy?'Seeding…':'Seed from Audit'}</button>
-              </div>
-            </div>
-            <div className="grid-2">
-              <div className="card">
-                <div className="card-pad">
-                  <div className="h3">List</div>
-                  <ItemList projectId={projectId} items={items} />
-                </div>
-              </div>
-              <div className="card">
-                <div className="card-pad">
-                  <div className="h3">Board</div>
-                  <KanbanBoard projectId={projectId} items={items} />
-                </div>
-              </div>
-            </div>
-          </>
-        )}
+        <div className="toolbar">
+          <input className="input" value={title} onChange={e=>setTitle(e.target.value)} placeholder="Add item…" onKeyDown={e=>e.key==='Enter'&&add()} />
+          <button className="btn btn-primary" onClick={add}>Add</button>
+          <button className="btn" onClick={seed} disabled={busy}>{busy?'Seeding…':'Seed from Audit'}</button>
+        </div>
+        {err && <div className="card" style={{padding:12,borderColor:'rgba(239,68,68,.35)'}}>{err}</div>}
+        {!projectId && <div className="card" style={{padding:12}}>Loading…</div>}
+        {projectId && <KanbanBoard projectId={projectId} items={items} />}
       </div>
     </>
   )
