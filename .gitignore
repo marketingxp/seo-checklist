@@ -7,3 +7,8 @@ node_modules/
 .DS_Store
 
 !public/_redirects
+dist/
+node_modules/
+.env
+.env.local
+.DS_Store
