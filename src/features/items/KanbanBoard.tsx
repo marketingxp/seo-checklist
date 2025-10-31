@@ -1,5 +1,6 @@
-import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, closestCorners } from '@dnd-kit/core'
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, closestCorners, Over } from '@dnd-kit/core'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { useDroppable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import type { Item } from './api'
 import { useUpdateItem } from './api'
@@ -27,6 +28,15 @@ function SortableCard({item,onOpen}:{item:Item;onOpen:()=>void}){
   )
 }
 
+function ColumnDroppable({id,children}:{id:ColKey;children:React.ReactNode}){
+  const {setNodeRef, isOver} = useDroppable({id})
+  return (
+    <div ref={setNodeRef} className="column" id={id} style={isOver?{outline:'2px dashed rgba(96,165,250,.5)'}:undefined}>
+      {children}
+    </div>
+  )
+}
+
 export default function KanbanBoard({ projectId, items }: { projectId: string; items: Item[] }) {
   const update = useUpdateItem(projectId)
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint:{ distance:6 }}))
@@ -39,17 +49,23 @@ export default function KanbanBoard({ projectId, items }: { projectId: string; i
     return m
   }, [items])
 
-  const allIds = useMemo(()=>items.map(i=>i.id),[items])
+  const ids = useMemo(()=>items.map(i=>i.id),[items])
   const activeItem = activeId ? items.find(i=>i.id===activeId) || null : null
 
-  function getColumnOf(id:string|undefined|null): ColKey | null {
+  function colOf(id:string|undefined|null): ColKey | null {
     if(!id) return null
     const found = items.find(i=>i.id===id)
     return found ? found.status : null
   }
 
+  function endAt(over: Over | null | undefined){
+    if(!over) return null
+    const oid = String(over.id)
+    const inCol = (COLS.find(c=>c.key===oid)?.key) as ColKey | undefined
+    return inCol ?? null
+  }
+
   function handleDragStart(e:any){ setActiveId(String(e.active.id)) }
-  function handleDragOver(){}
 
   function handleDragEnd(e:any){
     const {active, over} = e
@@ -57,39 +73,36 @@ export default function KanbanBoard({ projectId, items }: { projectId: string; i
     if(!over) return
     const draggedId = String(active.id)
     const overId = String(over.id)
-    const sourceCol = getColumnOf(draggedId)
-    const destCol = getColumnOf(overId) ?? (COLS.map(c=>c.key).includes(overId as ColKey) ? overId as ColKey : null)
-    if(!sourceCol) return
-    const targetCol: ColKey = destCol || sourceCol
 
-    if(allIds.includes(overId)){
-      const destList = byCol[targetCol]
-      const overIndex = destList.findIndex(i=>i.id===overId)
-      const before = destList[overIndex-1]?.position ?? null
-      const after = destList[overIndex]?.position ?? null
-      const newPos = between(before, after)
-      if(newPos==null) return
-      update.mutate({ id: draggedId, status: targetCol, position: newPos })
+    const fromCol = colOf(draggedId)
+    const overIsItem = ids.includes(overId)
+    const toCol = overIsItem ? (colOf(overId) as ColKey) : (endAt(over) ?? fromCol)
+    if(!fromCol || !toCol) return
+
+    if(overIsItem){
+      const list = byCol[toCol]
+      const idx = list.findIndex(i=>i.id===overId)
+      const before = list[idx-1]?.position ?? null
+      const after = list[idx]?.position ?? null
+      const pos = between(before, after)
+      update.mutate({ id: draggedId, status: toCol, position: pos })
       return
     }
 
-    if(COLS.some(c=>c.key===overId as ColKey)){
-      const destList = byCol[overId as ColKey]
-      const before = destList.length ? destList[destList.length-1].position : null
-      const after = null
-      const newPos = between(before, after)
-      update.mutate({ id: draggedId, status: overId as ColKey, position: newPos })
-    }
+    const list = byCol[toCol]
+    const before = list.length ? list[list.length-1].position : null
+    const pos = between(before, null)
+    update.mutate({ id: draggedId, status: toCol, position: pos })
   }
 
   return (
     <>
-      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
+      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="board">
           {COLS.map(col=>{
             const list = byCol[col.key]
             return (
-              <div key={col.key} className="column" id={col.key}>
+              <ColumnDroppable key={col.key} id={col.key}>
                 <div className="column-head">
                   <div className="column-title">
                     <StatusBadge status={col.key}/>
@@ -104,7 +117,7 @@ export default function KanbanBoard({ projectId, items }: { projectId: string; i
                     <div className="drop-indicator" />
                   </SortableContext>
                 </div>
-              </div>
+              </ColumnDroppable>
             )
           })}
         </div>
