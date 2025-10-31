@@ -1,6 +1,6 @@
 // src/pages/app/SeedPlatesExpress.tsx
 import { useEffect, useState } from 'react'
-import { getOrCreatePlatesExpressProject, seedPlatesExpressFromAudit } from '@/features/seo/seedFromAudit'
+import { getOrCreatePlatesExpressProject, seedPlatesExpressFromList } from '@/features/seo/seedFromList'
 
 export default function SeedPlatesExpress() {
   const [busy, setBusy] = useState(false)
@@ -11,7 +11,7 @@ export default function SeedPlatesExpress() {
     try {
       setBusy(true); setError(null)
       const proj = await getOrCreatePlatesExpressProject()
-      const res  = await seedPlatesExpressFromAudit(proj.id)
+      const res  = await seedPlatesExpressFromList(proj.id)
       setResult(res)
     } catch (e:any) {
       setError(e?.message || 'Failed to seed')
