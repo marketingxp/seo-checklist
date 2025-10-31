@@ -1,3 +1,4 @@
+import SeoSetup from "@/pages/app/SeoSetup"
 import { Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Overview from '@/pages/app/Overview'
@@ -16,7 +17,8 @@ export default function App() {
   return (
     <Suspense fallback={<div style={{ padding: 24 }}>Loading…</div>}>
       <Routes>
-        <Route path="/" element={<Home />} />
+          <Route path="/app/seo/setup" element={<SeoSetup />} />
+<Route path="/" element={<Home />} />
         {/* /app redirects to overview */}
         <Route path="/app" element={<Navigate to="/app/projects/overview" replace />} />
         {/* Overview list */}
