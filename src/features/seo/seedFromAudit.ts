@@ -7,7 +7,7 @@ type SeedItem = {
   notes: string
 }
 
-const tasks: SeedItem[] = [
+export const tasks: SeedItem[] = [
   {
     title: 'Set canonical tags on all templates',
     notes: `**Goal:** Prevent duplicate content and consolidate signals.
@@ -150,7 +150,7 @@ const tasks: SeedItem[] = [
 - Avoid keyword stuffing; write for users.
 
 **Done when:** 10 briefs approved, pages updated or ready in CMS.`
-  },
+  }
 ]
 
 export async function getOrCreatePlatesExpressProject() {
@@ -158,7 +158,6 @@ export async function getOrCreatePlatesExpressProject() {
   if (!user?.user) throw new Error('Not signed in')
   const uid = user.user.id
 
-  // Find project
   const { data: existing, error: findErr } = await supabase
     .from('projects')
     .select('id')
@@ -166,7 +165,6 @@ export async function getOrCreatePlatesExpressProject() {
     .eq('name', 'Plates Express')
     .maybeSingle()
   if (findErr) throw findErr
-
   if (existing) return existing
 
   const { data: created, error: insErr } = await supabase
@@ -174,58 +172,47 @@ export async function getOrCreatePlatesExpressProject() {
     .insert([{ name: 'Plates Express', color: 'indigo' }])
     .select('id')
     .single()
-
   if (insErr) throw insErr
   return created
 }
 
 export async function seedPlatesExpressFromAudit(projectId: string) {
   if (!projectId) throw new Error('Missing projectId')
-
-  // Fetch existing items for this project
   const { data: current, error: curErr } = await supabase
     .from('items')
     .select('id,title,notes,position,status,tags')
     .eq('project_id', projectId)
-
   if (curErr) throw curErr
   const map = new Map((current||[]).map(i => [i.title.trim().toLowerCase(), i]))
 
-  let inserted = 0
-  let updated = 0
-  const inserts: any[] = []
-  const updates: any[] = []
-
+  let inserts = 0, updates = 0
   const nowPos = () => Date.now() + Math.random()
 
   for (const t of tasks) {
     const key = t.title.trim().toLowerCase()
     const found = map.get(key)
     if (!found) {
-      inserts.push({
+      const { error } = await supabase.from('items').insert([{
         project_id: projectId,
         title: t.title,
         status: t.status ?? 'todo',
         tags: t.tags ?? [],
         notes: t.notes,
         position: nowPos(),
-      })
-      inserted++
+      }])
+      if (error) throw error
+      inserts++
     } else if (!found.notes || found.notes.trim() === '') {
-      updates.push({ id: found.id, notes: t.notes })
-      updated++
+      const { error } = await supabase.from('items').update({ notes: t.notes }).eq('id', found.id)
+      if (error) throw error
+      updates++
     }
   }
+  return { inserted: inserts, updated: updates }
+}
 
-  if (inserts.length) {
-    const { error: insErr } = await supabase.from('items').insert(inserts)
-    if (insErr) throw insErr
-  }
-
-  for (const u of updates) {
-    const { error: upErr } = await supabase.from('items').update({ notes: u.notes }).eq('id', u.id)
-    if (upErr) throw upErr
-  }
-
-  return { inserted, updated }
+export function getNotesTemplateForTitle(title: string): string | null {
+  const key = (title||'').trim().toLowerCase()
+  const t = tasks.find(x => x.title.trim().toLowerCase() === key)
+  return t ? t.notes : null
 }

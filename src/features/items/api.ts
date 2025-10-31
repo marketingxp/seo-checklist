@@ -1,38 +1,26 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { getNotesTemplateForTitle } from '@/features/seo/seedFromAudit'
 
 export type Item = {
   id: string
+  user_id: string
   project_id: string
   title: string
-  status: 'todo' | 'in_progress' | 'blocked' | 'done'
+  status: 'todo'|'in_progress'|'blocked'|'done'
   notes: string | null
-  tags: string[]
+  tags: string[] | null
   due_date: string | null
   position: number
   created_at: string
   updated_at: string
-  user_id: string
 }
 
-const normalize = (row: any): Item => ({
-  id: String(row.id),
-  project_id: String(row.project_id),
-  title: String(row.title ?? ''),
-  status: (['todo','in_progress','blocked','done'] as const).includes(row.status) ? row.status : 'todo',
-  notes: row.notes ?? null,
-  tags: Array.isArray(row.tags) ? row.tags.map(String) : [],
-  due_date: row.due_date ?? null,
-  position: Number.isFinite(row.position) ? Number(row.position) : Date.now(),
-  created_at: String(row.created_at ?? new Date().toISOString()),
-  updated_at: String(row.updated_at ?? new Date().toISOString()),
-  user_id: String(row.user_id ?? '')
-})
+const qKey = (projectId: string) => ['items', projectId]
 
-export const useItems = (projectId: string) =>
-  useQuery({
-    queryKey: ['items', projectId],
-    enabled: !!projectId,
+export function useItems(projectId: string) {
+  return useQuery({
+    queryKey: qKey(projectId),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('items')
@@ -40,57 +28,54 @@ export const useItems = (projectId: string) =>
         .eq('project_id', projectId)
         .order('position', { ascending: true })
       if (error) throw error
-      const rows = Array.isArray(data) ? data : []
-      return rows.map(normalize)
-    }
-  })
-
-export const useCreateItem = (projectId: string) => {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async (partial: Partial<Item>) => {
-      const payload = {
-        project_id: projectId,
-        title: String(partial.title ?? ''),
-        status: partial.status ?? 'todo',
-        notes: partial.notes ?? null,
-        tags: Array.isArray(partial.tags) ? partial.tags : [],
-        due_date: partial.due_date ?? null,
-        position: Number.isFinite(partial.position as number) ? partial.position : Date.now()
-      }
-      const { data, error } = await supabase.from('items').insert(payload).select().single()
-      if (error) throw error
-      return normalize(data)
+      return (data || []) as Item[]
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['items', projectId] })
+    enabled: !!projectId
   })
 }
 
-export const useUpdateItem = (projectId: string) => {
+export function useCreateItem(projectId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (update: Partial<Item> & { id: string }) => {
-      const { id, ...patch } = update
-      const safe: Record<string, any> = { ...patch }
-      if ('tags' in safe && !Array.isArray(safe.tags)) delete safe.tags
-      if ('position' in safe) {
-        const n = Number(safe.position)
-        if (!Number.isFinite(n)) delete safe.position
-      }
+    mutationFn: async (input: Partial<Item>) => {
+      const title = (input.title || '').trim()
+      const notes = (input.notes && input.notes.trim()) ? input.notes : (getNotesTemplateForTitle(title) || '')
       const { data, error } = await supabase
         .from('items')
-        .update(safe)
-        .eq('id', id)
-        .select()
+        .insert([{ project_id: projectId, status: 'todo', tags: [], position: Date.now(), ...input, notes }])
+        .select('*')
         .single()
       if (error) throw error
-      return normalize(data)
+      return data as Item
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['items', projectId] })
+    onSuccess: () => qc.invalidateQueries({ queryKey: qKey(projectId) })
   })
 }
 
-export const useDeleteItem = (projectId: string) => {
+export function useUpdateItem(projectId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (patch: Partial<Item> & { id: string }) => {
+      const { id, ...rest } = patch
+      const { data, error } = await supabase.from('items').update(rest).eq('id', id).select('*').single()
+      if (error) throw error
+      return data as Item
+    },
+    onMutate: async (patch) => {
+      await qc.cancelQueries({ queryKey: qKey(projectId) })
+      const prev = qc.getQueryData<Item[]>(qKey(projectId)) || []
+      const optimistic = prev.map(i => i.id === patch.id ? { ...i, ...patch } as Item : i)
+      qc.setQueryData(qKey(projectId), optimistic)
+      return { prev }
+    },
+    onError: (_err, _patch, ctx) => {
+      if (ctx?.prev) qc.setQueryData(qKey(projectId), ctx.prev)
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: qKey(projectId) })
+  })
+}
+
+export function useDeleteItem(projectId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
@@ -98,6 +83,6 @@ export const useDeleteItem = (projectId: string) => {
       if (error) throw error
       return id
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['items', projectId] })
+    onSuccess: () => qc.invalidateQueries({ queryKey: qKey(projectId) })
   })
 }

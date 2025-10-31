@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 import Modal from '@/components/Modal'
 import type { Item } from './api'
 import { Priority, getPriority, setPriority, prioColors } from './priority'
+import { getNotesTemplateForTitle } from '@/features/seo/seedFromAudit'
 
 function md(text: string){
-  // ultra-light markdown-ish: **bold**, `code`, line breaks
   return (text||'').trim()
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
@@ -15,7 +15,20 @@ function md(text: string){
 
 export default function ItemDialog({open,item,onClose,onSave}:{open:boolean;item:Item|null;onClose:()=>void;onSave:(patch:Partial<Item>&{id:string})=>void}){
   const [title,setTitle]=useState(''); const [notes,setNotes]=useState(''); const [prio,setPrio]=useState<Priority>('medium')
-  useEffect(()=>{ if(item){ setTitle(item.title||''); setNotes(item.notes||''); setPrio(getPriority(item.tags)) } },[item])
+
+  useEffect(()=>{
+    if(!item) return
+    setTitle(item.title||'')
+    const existing = (item.notes||'').trim()
+    if(existing){
+      setNotes(existing)
+    }else{
+      const tpl = getNotesTemplateForTitle(item.title||'')
+      setNotes(tpl || '')
+    }
+    setPrio(getPriority(item.tags))
+  },[item])
+
   if(!item) return null
   return (
     <Modal open={open} onClose={onClose}>
