@@ -64,3 +64,19 @@ export default function PlatesExpress() {
     </>
   )
 }
+
+// --- add near your imports ---
+// import { clearPlatesExpressItems } from '@/features/seo/reset'
+// import { seedPlatesExpressFromAudit, getOrCreatePlatesExpressProject } from '@/features/seo/seedFromAudit'
+
+// --- somewhere in the component toolbar ---
+/*
+<button className="btn btn-danger" onClick={async ()=>{
+  const { deleted } = await clearPlatesExpressItems()
+  const proj = await getOrCreatePlatesExpressProject()
+  const res = await seedPlatesExpressFromAudit(proj.id)
+  alert(`Reset complete. Inserted: ${res.inserted}, Updated: ${res.updated}`)
+}}>
+  Reset & Reseed
+</button>
+*/
