@@ -1,60 +1,46 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
-import type { Project } from '@/types'
-import { db } from '@/lib/idb'
 
-const key = ['projects']
+export type Project = {
+  id: string
+  user_id: string
+  name: string
+  color: string
+  created_at: string
+  updated_at: string
+}
 
-export function useProjects() {
-  return useQuery({
-    queryKey: key,
+const normalize = (row: any): Project => ({
+  id: String(row.id),
+  user_id: String(row.user_id ?? ''),
+  name: String(row.name ?? ''),
+  color: String(row.color ?? '#0EA5E9'),
+  created_at: String(row.created_at ?? new Date().toISOString()),
+  updated_at: String(row.updated_at ?? new Date().toISOString())
+})
+
+export const useProjects = () =>
+  useQuery({
+    queryKey: ['projects'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: true })
+      const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false })
       if (error) throw error
-      const _db = await db()
-      await _db.put('projects', data, 'all')
-      return data as Project[]
-    },
-    initialData: async () => {
-      const _db = await db()
-      return (await _db.get('projects', 'all')) as Project[] | undefined
+      return (Array.isArray(data) ? data : []).map(normalize)
     }
   })
-}
 
-async function queue(op: any) {
-  const _db = await db()
-  const id = crypto.randomUUID()
-  await _db.put('mutationQueue', { id, ts: Date.now(), op }, id)
-}
-
-export function useCreateProject() {
+export const useCreateProject = () => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (draft: Partial<Project>) => {
-      if (!navigator.onLine) {
-        await queue({ table: 'projects', action: 'insert', payload: draft })
-        return draft as Project
-      }
-      const { data, error } = await supabase.from('projects').insert(draft).select().single()
+    mutationFn: async (input: { name: string; color?: string }) => {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert({ name: input.name, color: input.color ?? '#0EA5E9' })
+        .select()
+        .single()
       if (error) throw error
-      return data as Project
+      return normalize(data)
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: key })
-  })
-}
-
-export function useDeleteProject() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async (id: string) => {
-      if (!navigator.onLine) {
-        await queue({ table: 'projects', action: 'delete', payload: { id } })
-        return
-      }
-      const { error } = await supabase.from('projects').delete().eq('id', id)
-      if (error) throw error
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: key })
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] })
   })
 }

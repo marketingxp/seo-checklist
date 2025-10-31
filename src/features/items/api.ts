@@ -1,4 +1,3 @@
-// src/features/items/api.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 
@@ -72,15 +71,12 @@ export const useUpdateItem = (projectId: string) => {
   return useMutation({
     mutationFn: async (update: Partial<Item> & { id: string }) => {
       const { id, ...patch } = update
-
-      // safety: keep patch clean
       const safe: Record<string, any> = { ...patch }
       if ('tags' in safe && !Array.isArray(safe.tags)) delete safe.tags
       if ('position' in safe) {
         const n = Number(safe.position)
         if (!Number.isFinite(n)) delete safe.position
       }
-
       const { data, error } = await supabase
         .from('items')
         .update(safe)

@@ -1,33 +1,27 @@
-import type { Item, Status } from '@/types'
+import type { Item } from './api'
 import { useUpdateItem } from './api'
-import { useMemo } from 'react'
 
-const STATUSES: Status[] = ['todo', 'in_progress', 'blocked', 'done']
-
-export default function KanbanBoard({ projectId, items }: { projectId: string, items: Item[] }) {
+export default function KanbanBoard({ projectId, items }: { projectId: string; items: Item[] }) {
   const update = useUpdateItem(projectId)
-  const byStatus = useMemo(() =>
-    Object.fromEntries(STATUSES.map(s => [s, items.filter(i => i.status === s)])), [items])
-
+  const cols: { key: Item['status']; title: string }[] = [
+    { key: 'todo', title: 'To-do' },
+    { key: 'in_progress', title: 'In progress' },
+    { key: 'blocked', title: 'Blocked' },
+    { key: 'done', title: 'Done' },
+  ]
   return (
-    <div className="grid grid-cols-4 gap-3">
-      {STATUSES.map(s => (
-        <div key={s} className="rounded border border-border p-2">
-          <h3 className="capitalize mb-2 opacity-80">{s.replace('_',' ')}</h3>
-          <div className="space-y-2">
-            {byStatus[s].map(i => (
-              <div key={i.id} className="rounded bg-muted p-2">
-                <div className="font-medium">{i.title}</div>
-                <div className="text-xs opacity-75">{i.tags?.join(', ')}</div>
-                <div className="text-xs opacity-60">{i.due_date ?? ''}</div>
-                <div className="mt-2 flex gap-1">
-                  {STATUSES.map(ns => (
-                    <button key={ns} className="text-xs px-2 py-1 rounded bg-zinc-800" onClick={() => {
-                      const maxPos = Math.max(0, ...items.filter(x => x.status === ns).map(x => x.position || 0))
-                      update.mutate({ id: i.id, status: ns, position: maxPos + 1000 })
-                    }}>{ns[0].toUpperCase()}</button>
-                  ))}
-                </div>
+    <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }}>
+      {cols.map(c => (
+        <div key={c.key} style={{ border:'1px solid #eee', borderRadius:6, padding:12 }}>
+          <div style={{ fontWeight:600, marginBottom:8 }}>{c.title}</div>
+          <div style={{ display:'grid', gap:8 }}>
+            {items.filter(i => i.status===c.key).map(i => (
+              <div key={i.id} style={{ border:'1px solid #ddd', padding:8, borderRadius:6, background:'#fafafa' }}>
+                <div style={{ fontWeight:500 }}>{i.title}</div>
+                <button onClick={() => update.mutate({ id: i.id, status: 'todo' })} style={{ marginRight:4 }}>T</button>
+                <button onClick={() => update.mutate({ id: i.id, status: 'in_progress' })} style={{ marginRight:4 }}>I</button>
+                <button onClick={() => update.mutate({ id: i.id, status: 'blocked' })} style={{ marginRight:4 }}>B</button>
+                <button onClick={() => update.mutate({ id: i.id, status: 'done' })}>D</button>
               </div>
             ))}
           </div>
