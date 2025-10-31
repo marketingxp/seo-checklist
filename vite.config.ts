@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'robots.txt'],
       manifest: {
-        name: 'Checklist',
-        short_name: 'Checklist',
+        name: 'SEO MXP',
+        short_name: 'SEO MXP',
         start_url: '/',
         display: 'standalone',
         background_color: '#0B1021',
@@ -21,26 +21,10 @@ export default defineConfig({
           { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
           { src: 'pwa-512x512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
         ]
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        runtimeCaching: [
-          {
-            urlPattern: ({ url }) => url.origin === self.location.origin,
-            handler: 'StaleWhileRevalidate',
-            options: { cacheName: 'static' }
-          },
-          {
-            urlPattern: ({ url }) => url.origin.includes('supabase.co'),
-            handler: 'NetworkFirst',
-            options: { cacheName: 'api' }
-          }
-        ]
       }
     })
   ],
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) }
-  },
-  server: { port: 5173 }
+  }
 })
