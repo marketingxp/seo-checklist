@@ -1,9 +1,24 @@
-import { ReactNode, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
-export function AuthGate({ children }: { children: ReactNode }) {
+export default function AuthGate({children}:{children:React.ReactNode}) {
   const [ready, setReady] = useState(false)
-  useEffect(() => { supabase.auth.getSession().then(() => setReady(true)) }, [])
-  if (!ready) return <div className="p-6">Loading…</div>
+  const [authed, setAuthed] = useState(false)
+
+  useEffect(() => {
+    let mounted = true
+    supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return
+      setAuthed(!!data.session)
+      setReady(true)
+    })
+    const { data: sub } = supabase.auth.onAuthStateChange((_evt, session) => {
+      setAuthed(!!session)
+    })
+    return () => { sub.subscription.unsubscribe(); mounted = false }
+  }, [])
+
+  if (!ready) return <div className="container"><div className="card" style={{padding:12}}>Loading…</div></div>
+  if (!authed) return <div className="container"><div className="card" style={{padding:12}}>Please sign in</div></div>
   return <>{children}</>
 }
