@@ -1,0 +1,66 @@
+[project.ts]: detectFrameworks
+[project.ts]: detectBuildSystem
+[project.ts]: detectWorkspaces
+[project.ts]: detectPackageManager
+[project.ts]: detectFrameworksInPath - undefined
+[project.ts]: getBuildSettings
+[project.ts]: detectFrameworks
+[get-build-settings.ts] getBuildSettings for baseDirectory: 
+​
+Netlify Build                                                 
+────────────────────────────────────────────────────────────────
+​
+❯ Version
+  @netlify/build 35.2.7
+​
+❯ Flags
+  accountId: 63a5d11fd922a819b5fb32f8
+  context: production
+  debug: true
+  dry: false
+  edgeFunctionsBootstrapURL: https://v2-17-1--edge.netlify.com/bootstrap/index-combined.ts
+  mode: cli
+  siteId: bde1426b-996d-4e4b-b79d-549ddedfbdd0
+​
+❯ Current directory
+  /Users/mattharrison/Documents/GitHub/checklist-app
+​
+❯ Config file
+  No config file was defined: using default values.
+​
+❯ Resolved config
+  build:
+    base: /Users/mattharrison/Documents/GitHub/checklist-app
+    command: npm run build
+    commandOrigin: ui
+    publish: /Users/mattharrison/Documents/GitHub/checklist-app/dist/client
+    publishOrigin: ui
+  functionsDirectory: /Users/mattharrison/Documents/GitHub/checklist-app/netlify/functions
+​
+❯ Context
+  production
+​
+Build command from Netlify app                                
+────────────────────────────────────────────────────────────────
+​
+$ npm run build
+Build step duration: options.onEnd completed in 1ms
+​
+"build.command" failed                                        
+────────────────────────────────────────────────────────────────
+​
+  Error message
+  Command failed with exit code 1: npm run build
+​
+  Error location
+  In Build command from Netlify app:
+  npm run build
+​
+  Resolved config
+  build:
+    base: /Users/mattharrison/Documents/GitHub/checklist-app
+    command: npm run build
+    commandOrigin: ui
+    publish: /Users/mattharrison/Documents/GitHub/checklist-app/dist/client
+    publishOrigin: ui
+  functionsDirectory: /Users/mattharrison/Documents/GitHub/checklist-app/netlify/functions

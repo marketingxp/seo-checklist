@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; }
+
+* { @apply outline-none focus-visible:ring focus-visible:ring-sky-500; }
