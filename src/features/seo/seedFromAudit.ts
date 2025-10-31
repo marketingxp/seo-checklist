@@ -7,190 +7,140 @@ type SeedItem = {
   notes: string
 }
 
+// === Audit-driven task templates (Plates Express) ===
 export const tasks: SeedItem[] = [
   {
-    title: 'Set canonical tags on all templates',
-    notes: `**Goal:** Prevent duplicate content and consolidate signals.
+    title: 'Staging: block indexation (noindex + robots + header)',
+    tags: ['P0','indexation','staging'],
+    notes: `**Why:** Staging must stay out of Google to avoid duplicate indexation.
 
 **Do:**
-- Add \`<link rel="canonical">\` to category, product, pagination, and blog templates.
-- Point each page to its preferred, self-referencing canonical.
-- For filtered/sorted/UTM variants, canonicalise to the clean URL.
-- Verify with the URL Inspection tool (Search Console) and in rendered HTML.
+- Send header: \`X-Robots-Tag: noindex, nofollow\`.
+- Add global meta: \`<meta name="robots" content="noindex,nofollow">\`.
+- \`/robots.txt\`: \`User-agent: *\\nDisallow: /\`.
+- Remove all three at launch.
 
-**Checks:**
-- One canonical tag per page.
-- No cross-canonicals to non-indexable pages.
-- Pagination pages have self-canonicals (unless explicitly consolidating).
-
-**Done when:** Sample of 20 pages shows correct self-referencing canonicals.`
+**Acceptance:** A crawl verifies noindex,nofollow on staging and robots disallow; prod is indexable. :contentReference[oaicite:0]{index=0}`
   },
   {
-    title: 'Generate XML sitemaps and submit in Search Console',
-    notes: `**Goal:** Ensure discoverability and fast inclusion.
-
-**Do:**
-- Create index sitemap \`/sitemap.xml\` linking to: \`/sitemap-products.xml\`, \`/sitemap-categories.xml\`, \`/sitemap-pages.xml\`, \`/sitemap-blog.xml\`.
-- Include only **indexable** 200 pages (no noindex, no 404).
-- Keep <50,000 URLs per file and <50MB uncompressed.
-- Update daily on content changes.
-
-**Checks:**
-- Validate with \`curl\` and an online validator.
-- Submit in GSC: Index → Sitemaps.
-
-**Done when:** GSC shows “Success” and coverage errors trend down.`
+    title: 'Fix cross-environment links on staging',
+    tags: ['P0','internal-linking','staging'],
+    notes: `**Issue:** Staging pages link to prod (e.g., “how-to-fit” points at \`www.platesexpress.co.uk\`).  
+**Fix:** Replace hardcoded absolute URLs with relative (/path) or env-aware base URL.  
+**Why it matters:** Prevents crawl leakage and content parity issues during QA.  
+**Done when:** All staging URLs use relative/env-aware links; JS-off crawl stays within staging. :contentReference[oaicite:1]{index=1}`
   },
   {
-    title: 'Fix duplicate titles & meta descriptions',
-    notes: `**Goal:** Improve CTR and avoid duplication issues.
-
-**Do:**
-- Export title/meta from your CMS or via a crawl (Screaming Frog).
-- For duplicates, add unique primary keyword + differentiator (brand, category, SKU).
-- Keep titles ~55–60 chars; descriptions 120–155 chars, compelling and unique.
-
-**Done when:** Duplicates reduced to near-zero; spot-check SERP snippets match intent.`
+    title: 'Mini template: correct Title/H1 + unique metadata',
+    tags: ['P0','metadata'],
+    notes: `**Issue:** Mini Number Plates page shows a 4D title; H1 is “Mini Number Plate Builder” (mismatch).  
+**Fix:** Set a unique, intent-aligned \`<title>\` and matching H1 for Mini; audit other model pages for the same issue.  
+**Done when:** Titles/H1s are unique and reflect manufacturing intent (not marketplace). :contentReference[oaicite:2]{index=2}`
   },
   {
-    title: 'Implement robots meta for thin/filtered pages',
-    notes: `**Goal:** Reduce index bloat.
+    title: 'Self-referential canonicals (staging & prod)',
+    tags: ['P0','canonicals'],
+    notes: `**Goal:** Ensure every URL declares itself as canonical.
 
-**Do:**
-- Add \`<meta name="robots" content="noindex,follow">\` to thin, thank-you, filter/sort-only pages.
-- Keep valuable landing pages indexable.
+**Do (staging):** Use self-canonicals pointing at the staging host; keep alongside noindex.  
+**Do (prod):** Self-canonicals on the final \`www.\` host.  
+**Params:** Canonicalise to the clean URL; keep UTMs/filters non-indexable.
 
-**Checks:** Crawl and confirm those pages are \`noindex\`.
-
-**Done when:** “Excluded (by noindex)” count rises appropriately in GSC while clicks stay stable or improve.`
+**Done when:** A sample shows \`<link rel="canonical" href="https://<host>/<path>">\` matching the page’s own URL. :contentReference[oaicite:3]{index=3}`
   },
   {
-    title: 'Improve Core Web Vitals (LCP/CLS/INP)',
-    notes: `**Goal:** Better UX and rankings support.
+    title: 'Prepare and submit clean XML sitemaps (prod only)',
+    tags: ['P0','sitemaps'],
+    notes: `**Scope:** Only indexable 200 pages; exclude staging.  
+**Structure:** \`/sitemap.xml\` (index) → products, categories, pages, blog maps. Keep <50k URLs/file and <50MB uncompressed.  
+**Process:** Validate, then submit in GSC after launch.
 
-**Do:**
-- **LCP:** Optimise hero image (preload, compressed, responsive sizes).
-- **CLS:** Reserve space for images/fonts; avoid layout shift on add-to-cart.
-- **INP:** Defer non-critical JS; use code-splitting; minimise third-party scripts.
-
-**Checks:** Web Vitals in PageSpeed Insights + GSC → Experience → Core Web Vitals.
-
-**Done when:** 75th percentile is green for mobile and desktop.`
+**Done when:** GSC shows “Success” and no staging URLs are present. :contentReference[oaicite:4]{index=4}`
   },
   {
-    title: 'Add structured data (Product, Breadcrumb, Organization)',
-    notes: `**Goal:** Rich results and better understanding.
-
-**Do:**
-- Product pages: \`Product\` with \`name\`, \`sku\`, \`brand\`, \`offers\` (price, availability), \`aggregateRating\` (if applicable).
-- Sitewide: \`Organization\` (logo, sameAs), \`BreadcrumbList\`.
-- Validate with Rich Results Test.
-
-**Done when:** Rich results eligible in GSC Enhancements, no critical errors.`
+    title: 'Remove “private plates” marketplace semantics',
+    tags: ['P1','content'],
+    notes: `**Issue:** Live contains marketplace-style phrases (e.g., “Cheap Private Number Plates Under £200”; legacy blog).  
+**Fix:** Remove/redirect legacy pages or rewrite to manufacturing intent; update internal anchors accordingly.  
+**Redirects:** 301 \`/cheap-number-plates/\` → \`/replacement-number-plates/\`; consider 410 for irrelevant legacy blog.  
+**Done when:** Zero residual “private plates” language on money pages; redirects in place. :contentReference[oaicite:5]{index=5}`
   },
   {
-    title: 'Consolidate HTTP/HTTPS and www/non-www',
-    notes: `**Goal:** Single canonical host.
-
-**Do:**
-- Force one scheme/host (e.g., \`https://www.platesexpress.co.uk\`) via 301s.
-- Update \`<link rel=canonical>\`, sitemap URLs, and internal links to the canonical host.
-
-**Checks:** \`curl -I\` on alternates returns 301 → canonical.
-
-**Done when:** Only one host variant is accessible without redirect chains.`
+    title: 'Structured data: Org, WebSite, Breadcrumb, FAQ (+Product if applicable)',
+    tags: ['P1','schema'],
+    notes: `**Add:** \`Organization\` (logo, sameAs), \`WebSite\`; \`BreadcrumbList\` for categories/builders; \`FAQPage\` for legal/compliance Qs.  
+**Product:** For configurable plate pages with visible SKU/pricing, add \`Product\` (brand, material, offers, rating if present).  
+**Avoid:** Any marketplace/private-plate entities.  
+**Done when:** Rich Results Test passes; GSC Enhancements show eligibility/no critical errors. :contentReference[oaicite:6]{index=6}`
   },
   {
-    title: 'Internal linking from top pages to priority categories',
-    notes: `**Goal:** Distribute PageRank and improve crawl paths.
+    title: 'Core Web Vitals: LCP, INP, CLS per template',
+    tags: ['P2','performance'],
+    notes: `**Targets:** LCP ≤2.5s, INP ≤200ms, CLS ≤0.1.
 
-**Do:**
-- Identify top pages (GSC/GA4) and add contextual links to key categories/products.
-- Use descriptive anchor text; avoid over-optimisation.
+**LCP:** Next-gen hero assets (AVIF/WebP), preload the LCP image, inline critical CSS.  
+**INP:** Split builder JS by route; defer non-critical scripts; minimise third-party.  
+**CLS:** Reserve image/font space; avoid layout-shifting banners.
 
-**Done when:** Each priority category has 5–10 new internal links from high-traffic pages.`
+**Done when:** Lab/field scores for Home/Category/Builder hit targets. :contentReference[oaicite:7]{index=7}`
   },
   {
-    title: 'Add Hreflang (if multiple locales)',
-    notes: `**Goal:** Correct geo/language targeting.
-
-**Do:**
-- For each variant, add reciprocal \`hreflang\` and \`x-default\`.
-- Use absolute URLs; ensure each cluster is complete.
-
-**Done when:** GSC International Targeting shows no hreflang errors.`
+    title: 'Internal linking: distribute equity to priority categories',
+    tags: ['P2','internal-linking'],
+    notes: `**Do:** From high-traffic pages, add descriptive anchors to Maker, Replacement, Motorcycle, and key category pages; keep intent clean.  
+**Done when:** JS-off crawl reaches all money pages in ≤3 clicks; priority categories gain 5–10 contextual links each. :contentReference[oaicite:8]{index=8}`
   },
   {
-    title: '404/410 cleanup and redirects',
-    notes: `**Goal:** Preserve equity and reduce errors.
+    title: 'Security headers + redirect hygiene',
+    tags: ['P1','security','ops'],
+    notes: `**Headers:** HSTS (1y incl. subdomains), \`X-Content-Type-Options: nosniff\`, \`X-Frame-Options: DENY\`, CSP \`default-src 'self'\`.  
+**Compression:** Gzip/Brotli on text assets; cache policy with proper \`Vary\`.  
+**Redirects:** Enforce 301 for http→https and non-www→www; avoid chains.
 
-**Do:**
-- Export 404s from logs/GSC.
-- Redirect valuable legacy URLs to best-match pages; 410 truly dead content.
-- Avoid redirect chains (>1 hop).
-
-**Done when:** GSC “Not found (404)” is trending down; key legacy URLs 301 to relevant pages.`
-  },
-  {
-    title: 'Tagging: analytics and events for SEO funnels',
-    notes: `**Goal:** Measure impact.
-
-**Do:**
-- Ensure GA4 + key events (view_item, add_to_cart, begin_checkout) fire correctly.
-- Label SEO landings in reports.
-
-**Done when:** You can segment SEO traffic by task area and see conversions.`
-  },
-  {
-    title: 'Content briefs for top 10 categories',
-    notes: `**Goal:** Expand and align content.
-
-**Do:**
-- For each category: search intent, subtopics (H2s), FAQs (FAQPage schema), internal links, unique copy (300–600 words).
-- Avoid keyword stuffing; write for users.
-
-**Done when:** 10 briefs approved, pages updated or ready in CMS.`
+**Done when:** Header checklists pass; all rewrites are single-hop 301. :contentReference[oaicite:9]{index=9}`
   }
 ]
 
+// === Project bootstrap & seeding ===
 export async function getOrCreatePlatesExpressProject() {
   const { data: user } = await supabase.auth.getUser()
   if (!user?.user) throw new Error('Not signed in')
-  const uid = user.user.id
 
-  const { data: existing, error: findErr } = await supabase
+  const { data: existing } = await supabase
     .from('projects')
     .select('id')
-    .eq('user_id', uid)
+    .eq('user_id', user.user.id)
     .eq('name', 'Plates Express')
     .maybeSingle()
-  if (findErr) throw findErr
+
   if (existing) return existing
 
-  const { data: created, error: insErr } = await supabase
+  const { data: created, error } = await supabase
     .from('projects')
     .insert([{ name: 'Plates Express', color: 'indigo' }])
     .select('id')
     .single()
-  if (insErr) throw insErr
+
+  if (error) throw error
   return created
 }
 
 export async function seedPlatesExpressFromAudit(projectId: string) {
   if (!projectId) throw new Error('Missing projectId')
+
   const { data: current, error: curErr } = await supabase
     .from('items')
-    .select('id,title,notes,position,status,tags')
+    .select('id,title,notes')
     .eq('project_id', projectId)
-  if (curErr) throw curErr
-  const map = new Map((current||[]).map(i => [i.title.trim().toLowerCase(), i]))
 
-  let inserts = 0, updates = 0
+  if (curErr) throw curErr
+  const has = new Map((current||[]).map(i => [i.title.trim().toLowerCase(), i]))
   const nowPos = () => Date.now() + Math.random()
 
+  let inserted = 0, updated = 0
   for (const t of tasks) {
     const key = t.title.trim().toLowerCase()
-    const found = map.get(key)
+    const found = has.get(key)
     if (!found) {
       const { error } = await supabase.from('items').insert([{
         project_id: projectId,
@@ -198,19 +148,20 @@ export async function seedPlatesExpressFromAudit(projectId: string) {
         status: t.status ?? 'todo',
         tags: t.tags ?? [],
         notes: t.notes,
-        position: nowPos(),
+        position: nowPos()
       }])
       if (error) throw error
-      inserts++
+      inserted++
     } else if (!found.notes || found.notes.trim() === '') {
       const { error } = await supabase.from('items').update({ notes: t.notes }).eq('id', found.id)
       if (error) throw error
-      updates++
+      updated++
     }
   }
-  return { inserted: inserts, updated: updates }
+  return { inserted, updated }
 }
 
+// Lookup by title for auto-prefill in dialogs/creates
 export function getNotesTemplateForTitle(title: string): string | null {
   const key = (title||'').trim().toLowerCase()
   const t = tasks.find(x => x.title.trim().toLowerCase() === key)
