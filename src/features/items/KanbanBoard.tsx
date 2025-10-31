@@ -1,10 +1,11 @@
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, closestCorners } from '@dnd-kit/core'
-import { SortableContext, useSortable, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Item } from './api'
 import { useUpdateItem } from './api'
 import { between } from './dnd'
 import ItemCard from './ItemCard'
+import ItemDialog from './ItemDialog'
 import StatusBadge from '@/components/StatusBadge'
 import { useMemo, useState } from 'react'
 
@@ -16,12 +17,12 @@ const COLS: {key:ColKey; title:string}[] = [
   { key:'done', title:'Done' }
 ]
 
-function SortableCard({item}:{item:Item}){
+function SortableCard({item,onOpen}:{item:Item;onOpen:()=>void}){
   const {attributes, listeners, setNodeRef, transform, transition, isDragging} = useSortable({id:item.id})
   const style = { transform: CSS.Transform.toString(transform), transition, cursor:'grab' as const }
   return (
     <div ref={setNodeRef} style={style} className={isDragging?'dragging':''} {...attributes} {...listeners}>
-      <ItemCard item={item}/>
+      <ItemCard item={item} onOpen={onOpen}/>
     </div>
   )
 }
@@ -30,6 +31,7 @@ export default function KanbanBoard({ projectId, items }: { projectId: string; i
   const update = useUpdateItem(projectId)
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint:{ distance:6 }}))
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [openItem, setOpenItem] = useState<Item|null>(null)
 
   const byCol = useMemo(() => {
     const m: Record<ColKey, Item[]> = { todo:[], in_progress:[], blocked:[], done:[] }
@@ -47,7 +49,6 @@ export default function KanbanBoard({ projectId, items }: { projectId: string; i
   }
 
   function handleDragStart(e:any){ setActiveId(String(e.active.id)) }
-
   function handleDragOver(){}
 
   function handleDragEnd(e:any){
@@ -59,7 +60,7 @@ export default function KanbanBoard({ projectId, items }: { projectId: string; i
     const sourceCol = getColumnOf(draggedId)
     const destCol = getColumnOf(overId) ?? (COLS.map(c=>c.key).includes(overId as ColKey) ? overId as ColKey : null)
     if(!sourceCol) return
-    let targetCol: ColKey = destCol || sourceCol
+    const targetCol: ColKey = destCol || sourceCol
 
     if(allIds.includes(overId)){
       const destList = byCol[targetCol]
@@ -82,7 +83,7 @@ export default function KanbanBoard({ projectId, items }: { projectId: string; i
   }
 
   return (
-    <div className="board-wrap">
+    <>
       <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
         <div className="board">
           {COLS.map(col=>{
@@ -98,7 +99,7 @@ export default function KanbanBoard({ projectId, items }: { projectId: string; i
                 </div>
                 <div className="column-scroller">
                   <SortableContext items={list.map(i=>i.id)} strategy={verticalListSortingStrategy}>
-                    {list.map(i=> <SortableCard key={i.id} item={i}/>)}
+                    {list.map(i=> <SortableCard key={i.id} item={i} onOpen={()=>setOpenItem(i)}/>)}
                     {list.length===0 && <div className="card">Empty</div>}
                     <div className="drop-indicator" />
                   </SortableContext>
@@ -109,6 +110,13 @@ export default function KanbanBoard({ projectId, items }: { projectId: string; i
         </div>
         <DragOverlay>{activeItem ? <ItemCard item={activeItem}/> : null}</DragOverlay>
       </DndContext>
-    </div>
+
+      <ItemDialog
+        open={!!openItem}
+        item={openItem}
+        onClose={()=>setOpenItem(null)}
+        onSave={(patch)=>{ update.mutate(patch as any); setOpenItem(null) }}
+      />
+    </>
   )
 }
