@@ -10,7 +10,6 @@ export default function PlatesExpress() {
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  // ensure project exists, then load
   useEffect(() => {
     let mounted = true
     ;(async () => {
@@ -25,12 +24,11 @@ export default function PlatesExpress() {
     return () => { mounted = false }
   }, [])
 
-  // realtime: reflect changes instantly within this project
   useEffect(() => {
     if (!projectId) return
     const ch = supabase.channel(`items-${projectId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'items', filter: `project_id=eq.${projectId}` },
-        () => { /* invalidate via tab refresh approach; simple for MVP */ location.reload() })
+        () => { location.reload() })
       .subscribe()
     return () => { supabase.removeChannel(ch) }
   }, [projectId])
@@ -51,39 +49,50 @@ export default function PlatesExpress() {
     try {
       setBusy(true); setErr(null)
       const res = await seedPlatesExpressFromAudit(projectId)
-      if (res.inserted === 0) setErr('Tasks already present (nothing new to add).')
+      if (res.inserted === 0) setErr('Tasks already present')
       else setErr(null)
     } catch (e: any) {
       setErr(e?.message ?? 'Failed to seed tasks')
     } finally { setBusy(false) }
   }
 
-  if (err) return <div style={{ padding:24, fontFamily:'system-ui', color:'red' }}>{err}</div>
-  if (!projectId) return <div style={{ padding:24, fontFamily:'system-ui' }}>Loading Plates Express…</div>
-
   return (
-    <div style={{ padding: 24, fontFamily: 'system-ui' }}>
-      <h1 style={{ marginBottom: 12 }}>Plates Express — SEO Checklist</h1>
-      <div style={{ display:'flex', gap:8, marginBottom:16 }}>
-        <input
-          value={title}
-          onChange={e=>setTitle(e.target.value)}
-          placeholder="Add item…"
-          onKeyDown={e=>e.key==='Enter' && add()}
-        />
-        <button onClick={add}>Add</button>
-        <button onClick={seed} disabled={busy}>{busy ? 'Seeding…' : 'Seed from Audit'}</button>
-      </div>
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:24 }}>
-        <div>
-          <h3>List</h3>
-          <ItemList projectId={projectId} items={items} />
-        </div>
-        <div>
-          <h3>Board</h3>
-          <KanbanBoard projectId={projectId} items={items} />
+    <>
+      <div className="header">
+        <div className="header-inner">
+          <div className="brand">Plates Express</div>
+          <div className="kicker">SEO Checklist</div>
         </div>
       </div>
-    </div>
+      <div className="container">
+        {err && <div className="card card-pad" style={{borderColor:'rgba(239,68,68,.35)'}}>{err}</div>}
+        {!projectId && <div className="card card-pad">Loading…</div>}
+        {projectId && (
+          <>
+            <div className="card card-pad" style={{marginBottom:16}}>
+              <div className="row row-gap">
+                <input className="input" value={title} onChange={e=>setTitle(e.target.value)} placeholder="Add item…" onKeyDown={e=>e.key==='Enter' && add()} />
+                <button className="btn btn-primary" onClick={add}>Add</button>
+                <button className="btn" onClick={seed} disabled={busy}>{busy?'Seeding…':'Seed from Audit'}</button>
+              </div>
+            </div>
+            <div className="grid-2">
+              <div className="card">
+                <div className="card-pad">
+                  <div className="h3">List</div>
+                  <ItemList projectId={projectId} items={items} />
+                </div>
+              </div>
+              <div className="card">
+                <div className="card-pad">
+                  <div className="h3">Board</div>
+                  <KanbanBoard projectId={projectId} items={items} />
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </>
   )
 }
