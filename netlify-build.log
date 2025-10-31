@@ -23,27 +23,52 @@ Netlify Build
   siteId: bde1426b-996d-4e4b-b79d-549ddedfbdd0
 ​
 ❯ Current directory
-  /Users/mattharrison/Documents/GitHub/checklist-app
+  /Users/mattharrison/Documents/GitHub/seomxp
 ​
 ❯ Config file
-  No config file was defined: using default values.
+  /Users/mattharrison/Documents/GitHub/seomxp/netlify.toml
 ​
 ❯ Resolved config
   build:
-    base: /Users/mattharrison/Documents/GitHub/checklist-app
     command: npm run build
-    commandOrigin: ui
-    publish: /Users/mattharrison/Documents/GitHub/checklist-app/dist/client
-    publishOrigin: ui
-  functionsDirectory: /Users/mattharrison/Documents/GitHub/checklist-app/netlify/functions
+    commandOrigin: config
+    publish: /Users/mattharrison/Documents/GitHub/seomxp/dist
+    publishOrigin: config
+  functionsDirectory: /Users/mattharrison/Documents/GitHub/seomxp/netlify/functions
+  redirects:
+    - from: /*
+      status: 200
+      to: /index.html
+  redirectsOrigin: config
 ​
 ❯ Context
   production
 ​
-Build command from Netlify app                                
+build.command from netlify.toml                               
 ────────────────────────────────────────────────────────────────
 ​
 $ npm run build
+
+> checklist@1.0.0 build
+> vite build
+
+vite v5.4.21 building for production...
+transforming...
+
+
+Source path: /Users/mattharrison/Documents/GitHub/seomxp/src/styles/globals.css
+Setting up new context...
+Finding changed files: 2.314ms
+Reading changed files: 11.63ms
+Sorting candidates: 0.259ms
+Generate rules: 7.992ms
+Build stylesheet: 0.523ms
+Potential classes:  724
+Active contexts:  1
+JIT TOTAL: 67.965ms
+
+
+✓ 178 modules transformed.
 Build step duration: options.onEnd completed in 1ms
 ​
 "build.command" failed                                        
@@ -53,14 +78,18 @@ Build step duration: options.onEnd completed in 1ms
   Command failed with exit code 1: npm run build
 ​
   Error location
-  In Build command from Netlify app:
+  In build.command from netlify.toml:
   npm run build
 ​
   Resolved config
   build:
-    base: /Users/mattharrison/Documents/GitHub/checklist-app
     command: npm run build
-    commandOrigin: ui
-    publish: /Users/mattharrison/Documents/GitHub/checklist-app/dist/client
-    publishOrigin: ui
-  functionsDirectory: /Users/mattharrison/Documents/GitHub/checklist-app/netlify/functions
+    commandOrigin: config
+    publish: /Users/mattharrison/Documents/GitHub/seomxp/dist
+    publishOrigin: config
+  functionsDirectory: /Users/mattharrison/Documents/GitHub/seomxp/netlify/functions
+  redirects:
+    - from: /*
+      status: 200
+      to: /index.html
+  redirectsOrigin: config
