@@ -3,8 +3,8 @@ import { useDeleteItem, useUpdateItem, Item } from './api'
 
 function derivePriority(tags: string[] = []): 'low'|'medium'|'high' {
   const lower = tags.map(t => String(t).toLowerCase())
-  if (lower.some(t => /^p0/.test(t) || /^p1/.test(t) || t === 'high')) return 'high'
-  if (lower.some(t => /^p2/.test(t) || t === 'medium')) return 'medium'
+  if (lower.includes('high')) return 'high'
+  if (lower.includes('medium')) return 'medium'
   return 'low'
 }
 
@@ -35,7 +35,7 @@ export default function ItemModal({
 
   function save() {
     const raw = Array.isArray(item.tags) ? item.tags.filter(Boolean) as string[] : []
-    const others = raw.filter(t => !/^p[0-3]/i.test(String(t)) && !['low','medium','high'].includes(String(t).toLowerCase()))
+    const others = raw.filter(t => !['low','medium','high'].includes(String(t).toLowerCase()))
     const tags = Array.from(new Set([priority, ...others]))
     update.mutate({ id: item.id, title, notes, tags })
     onClose()
