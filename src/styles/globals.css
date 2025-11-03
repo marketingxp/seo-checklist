@@ -1,9 +1,9 @@
 :root {
     --trello-bg: #050606;
     --trello-board: #050606;
-    --column-bg: #101204;
-    --card-bg: #22272b;
-    --card-hover: #282e33;
+    --column-bg: rgba(28, 35, 45, 0.92);
+    --card-bg: rgba(36, 44, 56, 0.95);
+    --card-hover: rgba(44, 53, 66, 0.98);
     --text-primary: #b6c2cf;
     --text-secondary: #9fadbc;
     --text-muted: #738496;
@@ -76,24 +76,54 @@ a:hover { text-decoration: underline }
 .s-blocked { background: var(--blocked) }
 .s-done { background: var(--ok) }
 .board {
-    display: flex; gap: 12px; align-items: flex-start; overflow-x: auto; padding-bottom: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    align-items: flex-start;
+    padding: 0 4px 16px;
     -webkit-user-select: none; -moz-user-select: none; user-select: none
 }
-.board::-webkit-scrollbar { height: 12px }
-.board::-webkit-scrollbar-track { background: transparent; margin: 0 8px }
-.board::-webkit-scrollbar-thumb { background: #a1bdd914; border-radius: 6px; border: 3px solid var(--trello-board) }
+.board::-webkit-scrollbar { height: 10px }
+.board::-webkit-scrollbar-track { background: transparent; margin: 0 4px }
+.board::-webkit-scrollbar-thumb { background: #a1bdd914; border-radius: 6px; border: 2px solid transparent }
 .board::-webkit-scrollbar-thumb:hover { background: #a6c5e229 }
 .column {
-    flex: 0 0 320px; background: var(--column-bg); border-radius: var(--radius-lg);
-    max-height: calc(100vh - 180px); display: flex; flex-direction: column
+    background: var(--column-bg);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(16px);
+    min-width: 260px;
 }
-.column-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px 8px }
+.column-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 4px 2px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    margin-bottom: 8px
+}
 .column-title { display: flex; gap: 8px; align-items: center; font-weight: 600; font-size: 14px; color: var(--text-primary) }
 .column-title>div { flex: 1 }
-.column-count { font-size: 12px; color: var(--text-muted); font-weight: 400 }
+.column-count {
+    font-size: 12px;
+    color: #8fa3bf;
+    font-weight: 600;
+    background: rgba(143, 163, 191, 0.15);
+    padding: 2px 8px;
+    border-radius: 999px;
+}
 .column-scroller {
-    overflow-y: auto; overflow-x: hidden; padding: 0 8px 8px;
-    display: flex; flex-direction: column; gap: 8px
+    overflow-y: auto; overflow-x: hidden;
+    padding: 0 4px 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    max-height: calc(100vh - 260px);
 }
 .column-scroller::-webkit-scrollbar { width: 8px }
 .column-scroller::-webkit-scrollbar-track { background: transparent; margin: 4px 0 }
@@ -106,6 +136,37 @@ a:hover { text-decoration: underline }
 }
 .card:hover { background: var(--card-hover) }
 .card:active { box-shadow: none }
+
+.task-card {
+    background: linear-gradient(155deg, rgba(47, 56, 68, 0.95) 0%, rgba(30, 37, 47, 0.92) 100%);
+    border: 1px solid rgba(132, 161, 196, 0.12);
+    border-radius: 12px;
+    padding: 16px 18px;
+    box-shadow: 0 14px 28px rgba(5, 6, 6, 0.55);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    text-align: left;
+    width: 100%;
+    margin-bottom: 14px;
+    backdrop-filter: blur(8px);
+}
+.task-card:last-child { margin-bottom: 0 }
+.task-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 32px rgba(0, 0, 0, 0.55);
+    border-color: rgba(87, 157, 255, 0.4);
+}
+.task-card:focus-visible {
+    outline: 2px solid rgba(87, 157, 255, 0.65);
+    outline-offset: 2px;
+}
+.task-card .card-title { margin-bottom: 8px }
+.task-card .card-title span:first-child { font-weight: 600; letter-spacing: -.01em }
+.task-card .card-tags { margin-top: 10px }
+.task-card .card-tags .badge {
+    background: rgba(149, 196, 255, 0.12);
+    color: #d4e2ff;
+    border: 1px solid rgba(149, 196, 255, 0.18);
+}
 .card-title {
     font-weight: 400; font-size: 14px; line-height: 20px; color: var(--text-primary); margin-bottom: 8px
 }
@@ -128,10 +189,6 @@ a:hover { text-decoration: underline }
     box-shadow: none; padding: 16px; font-size: 13px
 }
 .column-scroller .card:only-child:hover { background: transparent }
-.card-tags .badge:first-child { background: var(--blocked); color: #fff }
-.card-tags .badge:first-child:contains("P0") { background: var(--blocked) }
-.card-tags .badge:first-child:contains("P1") { background: var(--warn) }
-.card-tags .badge:first-child:contains("P2") { background: var(--ok) }
 .card-pad {
     padding: 20px 24px; background: var(--card-bg); border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg),0 0 0 100vmax #0009; margin: auto
@@ -168,9 +225,35 @@ a:hover { text-decoration: underline }
 .card-pad::-webkit-scrollbar-track { background: var(--column-bg); border-radius: 0 var(--radius-lg) var(--radius-lg) 0 }
 .card-pad::-webkit-scrollbar-thumb { background: #a1bdd914; border-radius: 5px; border: 2px solid var(--card-bg) }
 .card-pad::-webkit-scrollbar-thumb:hover { background: #a6c5e229 }
-.badge.priority-high { background: var(--blocked); color: #fff }
-.badge.priority-medium { background: var(--warn); color: #1d2125 }
-.badge.priority-low { background: var(--ok); color: #1d2125 }
+.badge.priority-high,
+.badge.priority-medium,
+.badge.priority-low {
+    background: rgba(117, 140, 177, 0.12);
+    color: #d8e1f0;
+    border: 1px solid rgba(117, 140, 177, 0.18);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.badge.priority-high::before,
+.badge.priority-medium::before,
+.badge.priority-low::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.badge.priority-high { color: #fda4a4; border-color: rgba(253, 164, 164, 0.35) }
+.badge.priority-medium { color: #fbd58d; border-color: rgba(251, 213, 141, 0.35) }
+.badge.priority-low { color: #9be6b0; border-color: rgba(155, 230, 176, 0.35) }
 
 @media (max-width: 768px) {
     body { font-size: 15px; line-height: 22px }
@@ -179,39 +262,15 @@ a:hover { text-decoration: underline }
     .toolbar { flex-direction: column; align-items: stretch; gap: 12px }
     .toolbar .input { min-width: 0; width: 100% }
     .toolbar .btn { width: 100% }
-    .board { flex-direction: column; overflow-x: visible; gap: 16px }
-    .column { flex: 1 1 auto; width: 100%; max-height: none }
-    .column-scroller { max-height: none; padding: 0 4px 12px }
-    .card { padding: 12px 14px }
+    .board { grid-template-columns: 1fr }
+    .column { min-width: 0 }
+    .column-scroller { max-height: none; padding: 0 2px 10px }
+    .task-card { margin-bottom: 12px }
     .card-title { margin-bottom: 6px }
     .card-pad { width: min(520px, 94vw); padding: 16px 18px }
     .card-pad>div { gap: 12px }
     .card-pad>div:last-child { flex-direction: column; align-items: stretch; gap: 12px }
     .card-pad>div:last-child button { width: 100% }
-.card-pad>div:last-child > div { width: 100%; display: flex; gap: 10px }
-.card-pad>div:last-child > div button { flex: 1 }
-}
-
-.board {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(260px, 1fr));
-    gap: 12px;
-    align-items: flex-start;
-    overflow-x: auto;
-    padding-bottom: 12px;
-    -webkit-user-select: none; -moz-user-select: none; user-select: none
-}
-
-.column { flex: 1; width: 100% }
-
-@media (max-width: 1200px) {
-    .board { grid-template-columns: repeat(3, minmax(240px, 1fr)); }
-}
-
-@media (max-width: 900px) {
-    .board { grid-template-columns: repeat(2, minmax(240px, 1fr)); }
-}
-
-@media (max-width: 640px) {
-    .board { grid-template-columns: 1fr; }
+    .card-pad>div:last-child > div { width: 100%; display: flex; gap: 10px }
+    .card-pad>div:last-child > div button { flex: 1 }
 }
