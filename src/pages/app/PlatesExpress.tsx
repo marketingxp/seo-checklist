@@ -12,6 +12,7 @@ export default function PlatesExpress() {
   const items = useMemo(() => Array.isArray(data) ? data : [], [data])
   const create = useCreateItem(projectId)
   const [title, setTitle] = useState('')
+  const [category, setCategory] = useState('')
 
   useEffect(() => {
     let mounted = true
@@ -32,9 +33,12 @@ export default function PlatesExpress() {
 
   const add = () => {
     const t = title.trim()
+    const cat = category.trim()
     if (!t || !projectId) return
-    create.mutate({ title: t, status: 'todo', tags: [], position: Date.now() })
+    const tags = cat ? [cat] : []
+    create.mutate({ title: t, status: 'todo', tags, position: Date.now() })
     setTitle('')
+    setCategory('')
   }
 
   const seed = async () => {
@@ -54,6 +58,7 @@ export default function PlatesExpress() {
       <div className="container">
         <div className="toolbar">
           <input className="input" value={title} onChange={e=>setTitle(e.target.value)} placeholder="Add item…" onKeyDown={e=>e.key==='Enter'&&add()} />
+          <input className="input" value={category} onChange={e=>setCategory(e.target.value)} placeholder="Category badge (optional)" onKeyDown={e=>e.key==='Enter'&&add()} />
           <button className="btn btn-primary" onClick={add}>Add</button>
           <button className="btn" onClick={seed} disabled={busy}>{busy?'Seeding…':'Seed from Audit'}</button>
         </div>
