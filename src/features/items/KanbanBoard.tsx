@@ -127,6 +127,7 @@ export default function KanbanBoard({ projectId, items }: { projectId: string; i
       <ItemDialog
         open={!!openItem}
         item={openItem}
+        projectId={projectId}
         onClose={()=>setOpenItem(null)}
         onSave={(patch)=>{ update.mutate(patch as any); setOpenItem(null) }}
       />

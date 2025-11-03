@@ -3,6 +3,7 @@ import Modal from '@/components/Modal'
 import type { Item } from './api'
 import { Priority, getPriority, setPriority, prioColors } from './priority'
 import { getNotesTemplateForTitle } from '@/features/seo/seedFromAudit'
+import { useDeleteItem } from './api'
 
 function md(text: string){
   return (text||'').trim()
@@ -13,8 +14,22 @@ function md(text: string){
     .replace(/\n/g,'<br/>')
 }
 
-export default function ItemDialog({open,item,onClose,onSave}:{open:boolean;item:Item|null;onClose:()=>void;onSave:(patch:Partial<Item>&{id:string})=>void}){
+export default function ItemDialog({
+  open,
+  item,
+  projectId,
+  onClose,
+  onSave
+}: {
+  open: boolean
+  item: Item | null
+  projectId: string
+  onClose: () => void
+  onSave: (patch: Partial<Item> & { id: string }) => void
+}){
   const [title,setTitle]=useState(''); const [notes,setNotes]=useState(''); const [prio,setPrio]=useState<Priority>('medium')
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const del = useDeleteItem(projectId)
 
   useEffect(()=>{
     if(!item) return
@@ -27,7 +42,18 @@ export default function ItemDialog({open,item,onClose,onSave}:{open:boolean;item
       setNotes(tpl || '')
     }
     setPrio(getPriority(item.tags))
+    setConfirmDelete(false)
   },[item])
+
+  function handleDelete(){
+    if(!item) return
+    del.mutate(item.id, {
+      onSuccess: () => {
+        setConfirmDelete(false)
+        onClose()
+      }
+    })
+  }
 
   if(!item) return null
   return (
@@ -50,9 +76,20 @@ export default function ItemDialog({open,item,onClose,onSave}:{open:boolean;item
         )}
 
         <textarea className="input" value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Notes" rows={10} style={{width:'100%'}}/>
-        <div style={{display:'flex',gap:10,justifyContent:'flex-end'}}>
-          <button className="btn" onClick={onClose}>Close</button>
-          <button className="btn btn-primary" onClick={()=>onSave({id:item.id,title,notes,tags:setPriority(item.tags, prio)})}>Save</button>
+        <div style={{display:'flex',gap:10,justifyContent:'space-between',alignItems:'center',flexWrap:'wrap'}}>
+          {!confirmDelete ? (
+            <button className="btn btn-danger" onClick={()=>setConfirmDelete(true)}>Delete</button>
+          ) : (
+            <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+              <span className="meta">Are you are?</span>
+              <button className="btn" onClick={()=>setConfirmDelete(false)} disabled={del.isPending}>No</button>
+              <button className="btn btn-danger" onClick={handleDelete} disabled={del.isPending}>{del.isPending?'Deleting…':'Yes'}</button>
+            </div>
+          )}
+          <div style={{display:'flex',gap:10}}>
+            <button className="btn" onClick={onClose}>Close</button>
+            <button className="btn btn-primary" onClick={()=>onSave({id:item.id,title,notes,tags:setPriority(item.tags, prio)})}>Save</button>
+          </div>
         </div>
       </div>
     </Modal>
