@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { DndContext, PointerSensor, useSensor, useSensors, DragEndEvent, DragOverEvent } from '@dnd-kit/core'
+import { DndContext, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import SortableCard from './SortableCard'
 import type { Item } from './api'
@@ -7,10 +7,10 @@ import { useUpdateItem } from './api'
 
 type Props = { projectId: string; items: Item[]; onOpen?: (it: Item)=>void }
 const COLS: { key: Item['status']; label: string }[] = [
-  { key: 'todo', label: 'To-do' },
+  { key: 'todo',        label: 'To-do' },
   { key: 'in_progress', label: 'In progress' },
-  { key: 'blocked', label: 'Blocked' },
-  { key: 'done', label: 'Done' }
+  { key: 'blocked',     label: 'Blocked' },
+  { key: 'done',        label: 'Done' }
 ]
 
 function nextPosition(targetIndex: number, list: Item[]) {
@@ -29,55 +29,35 @@ export default function KanbanBoard({ projectId, items, onOpen }: Props) {
   const byStatus = useMemo(() => {
     const g: Record<Item['status'], Item[]> = { todo:[], in_progress:[], blocked:[], done:[] }
     for (const it of items) g[it.status].push(it)
-    for (const k of Object.keys(g) as Item['status'][]) g[k].sort((a,b)=>(a.position??0)-(b.position??0))
+    (Object.keys(g) as Item['status'][]).forEach(k => g[k].sort((a,b)=>(a.position??0)-(b.position??0)))
     return g
   }, [items])
 
-  function getContainerOf(id: string) {
+  function containerOf(id: string) {
     for (const c of COLS) if (byStatus[c.key].some(i => i.id === id)) return c.key
     return undefined
   }
 
-  function handleDragOver(_e: DragOverEvent) {}
-
-  function handleDragEnd(e: DragEndEvent) {
+  function onDragEnd(e: DragEndEvent) {
     const { active, over } = e
     if (!active?.id || !over?.id) return
-    const activeId = String(active.id)
-    const overId = String(over.id)
+    const from = containerOf(String(active.id))
+    const to   = containerOf(String(over.id)) ?? (COLS.find(c => c.key === over.id)?.key)
+    if (!from || !to) return
 
-    const fromCol = getContainerOf(activeId)
-    const toCol = getContainerOf(overId) || (COLS.find(c => c.key === overId)?.key)
-    if (!fromCol || !toCol) return
-
-    const fromList = byStatus[fromCol]
-    const toListBase = byStatus[toCol]
-    const moving = items.find(i => i.id === activeId)
+    const moving = items.find(i => i.id === String(active.id))
     if (!moving) return
 
-    const isSameCol = fromCol === toCol
-    let newIndex = 0
+    const toList = byStatus[to]
+    const overIndex = toList.findIndex(i => i.id === String(over.id))
+    const targetIndex = overIndex >= 0 ? overIndex : toList.length
+    const pos = nextPosition(targetIndex, toList)
 
-    if (isSameCol) {
-      const overIndex = toListBase.findIndex(i => i.id === overId)
-      const actIndex = toListBase.findIndex(i => i.id === activeId)
-      if (overIndex < 0 || actIndex < 0) return
-      const temp = [...toListBase]
-      const [spliced] = temp.splice(actIndex, 1)
-      temp.splice(overIndex, 0, spliced)
-      newIndex = overIndex
-      const pos = nextPosition(newIndex, temp.filter(i => i.id !== activeId ? true : false))
-      update.mutate({ id: moving.id, position: pos })
-    } else {
-      const overIndex = toListBase.findIndex(i => i.id === overId)
-      const targetIndex = overIndex >= 0 ? overIndex : toListBase.length
-      const pos = nextPosition(targetIndex, toListBase)
-      update.mutate({ id: moving.id, status: toCol, position: pos })
-    }
+    update.mutate({ id: moving.id, status: to, position: pos })
   }
 
   return (
-    <DndContext sensors={sensors} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} onDragEnd={onDragEnd}>
       <div className="board">
         {COLS.map(c => (
           <div key={c.key} className="column">

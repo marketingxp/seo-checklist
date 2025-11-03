@@ -13,7 +13,7 @@ export default function ProjectPage() {
   const [openItem, setOpenItem] = useState<Item|null>(null)
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-6 space-y-4" style={{textAlign:'left'}}>
       <div className="flex gap-2">
         <input className="input" placeholder="Add item…" value={title} onChange={e=>setTitle(e.target.value)} />
         <button className="btn btn-primary" onClick={()=>{ if (!title) return; create.mutate({ title, status: 'todo', tags: [], position: Date.now() }); setTitle('') }}>Add</button>
@@ -21,7 +21,7 @@ export default function ProjectPage() {
       <div className="grid lg:grid-cols-2 gap-6">
         <div>
           <h2 className="text-xl mb-2">List</h2>
-          <ItemList projectId={id} items={data} />
+          <ItemList projectId={id} items={data} onOpen={setOpenItem} />
         </div>
         <div>
           <h2 className="text-xl mb-2">Board</h2>

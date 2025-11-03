@@ -34,8 +34,8 @@ export default function ItemModal({
 
   return (
     <div style={{position:'fixed', inset:0, display:'grid', placeItems:'center', background:'rgba(0,0,0,.5)', zIndex:50}}>
-      <div className="card card-pad" style={{ width: 'min(860px, 92vw)', maxHeight: '86vh', overflow: 'auto' }}>
-        <div className="card-pad" style={{ display: 'grid', gap: 16 }}>
+      <div className="card card-pad" style={{ width: 'min(860px, 92vw)', maxHeight: '86vh', overflow: 'auto', textAlign:'left' }}>
+        <div className="card-pad" style={{ display: 'grid', gap: 16, textAlign:'left' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
             <input className="input" placeholder="Title" value={title} onChange={e=>setTitle(e.target.value)} />
             <select
@@ -56,12 +56,12 @@ export default function ItemModal({
             </select>
           </div>
 
-          <div className="card" style={{ padding: '12px 14px' }}>
-            <div className="card-title" style={{ marginBottom: 6 }}>Notes (preview)</div>
-            <div className="meta" style={{ lineHeight: '22px', whiteSpace: 'pre-wrap' }}>{notes || '—'}</div>
+          <div className="card" style={{ padding: '12px 14px', textAlign:'left' }}>
+            <div className="card-title" style={{ marginBottom: 6, textAlign:'left' }}>Notes (preview)</div>
+            <div className="meta" style={{ lineHeight: '22px', whiteSpace: 'pre-wrap', textAlign:'left' }}>{notes || '—'}</div>
           </div>
 
-          <textarea className="input" placeholder="Notes" rows={10} style={{ width: '100%' }} value={notes} onChange={e=>setNotes(e.target.value)} />
+          <textarea className="input" placeholder="Notes" rows={10} style={{ width: '100%', textAlign:'left' }} value={notes} onChange={e=>setNotes(e.target.value)} />
 
           <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between' }}>
             <button className="btn btn-danger" onClick={()=>setConfirm(true)}>Delete</button>
@@ -75,7 +75,7 @@ export default function ItemModal({
 
       {confirm && (
         <div style={{position:'fixed', inset:0, display:'grid', placeItems:'center', background:'rgba(0,0,0,.5)', zIndex:60}}>
-          <div className="card-pad" style={{ width: 420, maxWidth: '92vw' }}>
+          <div className="card-pad" style={{ width: 420, maxWidth: '92vw', textAlign:'left' }}>
             <h2 style={{margin:0, marginBottom:10}}>Are you sure?</h2>
             <p className="meta" style={{marginTop:0}}>This will permanently delete the card.</p>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
