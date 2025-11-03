@@ -1,54 +1,102 @@
 import { useState } from 'react'
-import Confirm from '@/components/Confirm'
-import { useDeleteItem, useUpdateItem, Item } from './api'
+import { useDeleteItem, useUpdateItem, Item } from '@/features/items/api'
 
-export default function ItemModal({ open, onClose, projectId, item }: { open: boolean; onClose: () => void; projectId: string; item: Item }) {
+export default function ItemModal({
+  open,
+  onClose,
+  projectId,
+  item
+}: {
+  open: boolean
+  onClose: () => void
+  projectId: string
+  item: Item
+}) {
   const [title, setTitle] = useState(item.title)
+  const [priority, setPriority] = useState<'low'|'medium'|'high'>(() => {
+    const t = (item.tags || []).map(x => x.toLowerCase())
+    if (t.includes('high')) return 'high'
+    if (t.includes('medium')) return 'medium'
+    return 'low'
+  })
   const [notes, setNotes] = useState(item.notes ?? '')
-  const [showConfirm, setShowConfirm] = useState(false)
+  const [confirm, setConfirm] = useState(false)
   const update = useUpdateItem(projectId)
   const del = useDeleteItem(projectId)
 
   function save() {
-    update.mutate({ id: item.id, title, notes })
+    const tags = Array.from(new Set([priority, ...(item.tags || []).filter(t => !['low','medium','high'].includes(t.toLowerCase()))]))
+    update.mutate({ id: item.id, title, notes, tags })
     onClose()
   }
 
-  function requestDelete() {
-    setShowConfirm(true)
+  function askDelete() {
+    setConfirm(true)
   }
 
-  function confirmDelete() {
-    setShowConfirm(false)
+  function noDelete() {
+    setConfirm(false)
+  }
+
+  function yesDelete() {
     del.mutate(item.id, { onSuccess: onClose })
   }
 
-  function cancelDelete() {
-    setShowConfirm(false)
-  }
-
   if (!open) return null
+
   return (
-    <div style={{position:'fixed', inset:0, display:'grid', placeItems:'center', background:'rgba(0,0,0,.5)', zIndex:40}}>
-      <div className="card-pad" style={{width: 560, maxWidth: '94vw'}}>
-        <h2 style={{marginTop:0}}>Edit card</h2>
-        <input className="input" value={title} onChange={e=>setTitle(e.target.value)} placeholder="Title" style={{marginBottom:8}} />
-        <textarea className="input" value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Notes" />
-        <div style={{display:'flex', gap:8, justifyContent:'space-between', marginTop:12}}>
-          <button className="btn btn-danger" onClick={requestDelete}>Delete</button>
-          <div style={{display:'flex', gap:8}}>
-            <button className="btn" onClick={onClose}>Close</button>
-            <button className="btn btn-primary" onClick={save}>Save</button>
+    <div style={{position:'fixed', inset:0, display:'grid', placeItems:'center', background:'rgba(0,0,0,.5)', zIndex:50}}>
+      <div className="card card-pad" style={{ width: 'min(860px, 92vw)', maxHeight: '86vh', overflow: 'auto' }}>
+        <div className="card-pad" style={{ display: 'grid', gap: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+            <input className="input" placeholder="Title" value={title} onChange={e=>setTitle(e.target.value)} />
+            <select
+              className="select"
+              value={priority}
+              onChange={e=>setPriority(e.target.value as any)}
+              style={
+                priority==='high'
+                  ? { borderColor: 'rgb(239, 68, 68)', color: 'rgb(239, 68, 68)' }
+                  : priority==='medium'
+                  ? { borderColor: 'rgb(245, 158, 11)', color: 'rgb(245, 158, 11)' }
+                  : { borderColor: 'rgb(34, 197, 94)', color: 'rgb(34, 197, 94)' }
+              }
+            >
+              <option value="low">low</option>
+              <option value="medium">medium</option>
+              <option value="high">high</option>
+            </select>
+          </div>
+
+          <div className="card" style={{ padding: '12px 14px' }}>
+            <div className="card-title" style={{ marginBottom: 6 }}>Notes (preview)</div>
+            <div className="meta" style={{ lineHeight: '22px', whiteSpace: 'pre-wrap' }}>{notes || '—'}</div>
+          </div>
+
+          <textarea className="input" placeholder="Notes" rows={10} style={{ width: '100%' }} value={notes} onChange={e=>setNotes(e.target.value)} />
+
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between' }}>
+            <button className="btn btn-danger" onClick={askDelete}>Delete</button>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn" onClick={onClose}>Close</button>
+              <button className="btn btn-primary" onClick={save}>Save</button>
+            </div>
           </div>
         </div>
       </div>
-      <Confirm
-        open={showConfirm}
-        title="Are you sure?"
-        message="This will permanently delete the card."
-        onYes={confirmDelete}
-        onNo={cancelDelete}
-      />
+
+      {confirm && (
+        <div style={{position:'fixed', inset:0, display:'grid', placeItems:'center', background:'rgba(0,0,0,.5)', zIndex:60}}>
+          <div className="card-pad" style={{ width: 420, maxWidth: '92vw' }}>
+            <h2 style={{margin:0, marginBottom:10}}>Are you sure?</h2>
+            <p className="meta" style={{marginTop:0}}>This will permanently delete the card.</p>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button className="btn" onClick={noDelete}>No</button>
+              <button className="btn btn-danger" onClick={yesDelete}>Yes</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
