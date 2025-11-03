@@ -1,7 +1,8 @@
 import { useParams } from 'react-router-dom'
-import { useItems, useCreateItem } from '@/features/items/api'
+import { useItems, useCreateItem, Item } from '@/features/items/api'
 import ItemList from '@/features/items/ItemList'
 import KanbanBoard from '@/features/items/KanbanBoard'
+import ItemModal from '@/features/items/ItemModal'
 import { useState } from 'react'
 
 export default function ProjectPage() {
@@ -9,6 +10,7 @@ export default function ProjectPage() {
   const { data = [] } = useItems(id)
   const create = useCreateItem(id)
   const [title, setTitle] = useState('')
+  const [openItem, setOpenItem] = useState<Item|null>(null)
 
   return (
     <div className="p-6 space-y-4">
@@ -23,9 +25,12 @@ export default function ProjectPage() {
         </div>
         <div>
           <h2 className="text-xl mb-2">Board</h2>
-          <KanbanBoard projectId={id} items={data} />
+          <KanbanBoard projectId={id} items={data} onOpen={setOpenItem} />
         </div>
       </div>
+      {openItem && (
+        <ItemModal open={!!openItem} onClose={()=>setOpenItem(null)} projectId={id} item={openItem} />
+      )}
     </div>
   )
 }

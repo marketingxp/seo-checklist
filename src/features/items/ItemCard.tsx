@@ -1,66 +1,41 @@
-import { useState } from 'react'
-import { Item, useDeleteItem } from './api'
-
-function cap(s: string) { return s.charAt(0).toUpperCase() + s.slice(1) }
+import type { Item } from './api'
 
 export default function ItemCard({
   item,
-  projectId,
-  onOpen
+  onOpen,
+  dragProps
 }: {
   item: Item
-  projectId: string
   onOpen?: (it: Item) => void
+  dragProps?: {
+    setNodeRef: (node: HTMLElement | null) => void
+    attributes: Record<string, any>
+    listeners: Record<string, any>
+    isDragging: boolean
+  }
 }) {
-  const [ask, setAsk] = useState(false)
-  const del = useDeleteItem(projectId)
-
+  const { setNodeRef, attributes, listeners, isDragging } = dragProps || {}
   const rawTags = Array.isArray(item.tags) ? item.tags.filter(Boolean) as string[] : []
-  const priority = rawTags.find(t => ['high','medium','low'].includes(t.toLowerCase()))
-  const otherTags = rawTags.filter(t => t.trim() && t.toLowerCase() !== (priority || '').toLowerCase())
-
-  function open() {
-    if (onOpen) onOpen(item)
-  }
-  function requestDelete(e: React.MouseEvent) {
-    e.stopPropagation()
-    setAsk(true)
-  }
-  function cancel() { setAsk(false) }
-  function confirm() { del.mutate(item.id); setAsk(false) }
+  const pr = rawTags.find(t => ['high','medium','low'].includes(t.toLowerCase()))
+  const others = rawTags.filter(t => t.toLowerCase() !== (pr || '').toLowerCase())
 
   return (
-    <>
-      <div className="card" onClick={open}>
-        <div className="card-title" style={{display:'flex', alignItems:'center', justifyContent:'space-between', gap:8}}>
-          <span>{item.title}</span>
-          <button className="btn btn-danger" style={{padding:'4px 8px', fontSize:12}} onClick={requestDelete}>Delete</button>
-        </div>
-
-        {(priority || otherTags.length > 0) && (
-          <div className="card-tags">
-            {priority && (
-              <span className={`badge priority-${priority.toLowerCase()}`}>{cap(priority)}</span>
-            )}
-            {otherTags.map((t, i) => (
-              <span key={i} className="badge">{t}</span>
-            ))}
-          </div>
-        )}
+    <div
+      ref={setNodeRef}
+      className={`card ${isDragging ? 'dragging' : ''}`}
+      onClick={() => onOpen?.(item)}
+      style={{ position:'relative' }}
+    >
+      <div className="card-title" style={{display:'flex', alignItems:'center', gap:8}}>
+        <span style={{flex:1}}>{item.title}</span>
+        <span {...(attributes||{})} {...(listeners||{})} className="badge" style={{cursor:'grab'}}>⇅</span>
       </div>
-
-      {ask && (
-        <div style={{position:'fixed', inset:0, display:'grid', placeItems:'center', background:'rgba(0,0,0,.5)', zIndex:60}}>
-          <div className="card-pad" style={{ width: 420, maxWidth: '92vw' }}>
-            <h2 style={{margin:0, marginBottom:10}}>Are you sure?</h2>
-            <p className="meta" style={{marginTop:0}}>This will permanently delete the card.</p>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button className="btn" onClick={cancel}>No</button>
-              <button className="btn btn-danger" onClick={confirm}>Yes</button>
-            </div>
-          </div>
+      {(pr || others.length>0) && (
+        <div className="card-tags">
+          {pr && <span className={`badge priority-${pr.toLowerCase()}`}>{pr[0].toUpperCase()+pr.slice(1)}</span>}
+          {others.map((t,i)=><span key={i} className="badge">{t}</span>)}
         </div>
       )}
-    </>
+    </div>
   )
 }

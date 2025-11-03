@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useDeleteItem, useUpdateItem, Item } from '@/features/items/api'
+import { useDeleteItem, useUpdateItem, Item } from './api'
 
 export default function ItemModal({
   open,
@@ -28,18 +28,6 @@ export default function ItemModal({
     const tags = Array.from(new Set([priority, ...(item.tags || []).filter(t => !['low','medium','high'].includes(t.toLowerCase()))]))
     update.mutate({ id: item.id, title, notes, tags })
     onClose()
-  }
-
-  function askDelete() {
-    setConfirm(true)
-  }
-
-  function noDelete() {
-    setConfirm(false)
-  }
-
-  function yesDelete() {
-    del.mutate(item.id, { onSuccess: onClose })
   }
 
   if (!open) return null
@@ -76,7 +64,7 @@ export default function ItemModal({
           <textarea className="input" placeholder="Notes" rows={10} style={{ width: '100%' }} value={notes} onChange={e=>setNotes(e.target.value)} />
 
           <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between' }}>
-            <button className="btn btn-danger" onClick={askDelete}>Delete</button>
+            <button className="btn btn-danger" onClick={()=>setConfirm(true)}>Delete</button>
             <div style={{ display: 'flex', gap: 10 }}>
               <button className="btn" onClick={onClose}>Close</button>
               <button className="btn btn-primary" onClick={save}>Save</button>
@@ -91,8 +79,8 @@ export default function ItemModal({
             <h2 style={{margin:0, marginBottom:10}}>Are you sure?</h2>
             <p className="meta" style={{marginTop:0}}>This will permanently delete the card.</p>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button className="btn" onClick={noDelete}>No</button>
-              <button className="btn btn-danger" onClick={yesDelete}>Yes</button>
+              <button className="btn" onClick={()=>setConfirm(false)}>No</button>
+              <button className="btn btn-danger" onClick={() => { del.mutate(item.id, { onSuccess: onClose }); setConfirm(false) }}>Yes</button>
             </div>
           </div>
         </div>
