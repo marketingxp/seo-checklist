@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Item, useDeleteItem } from './api'
 
+function cap(s: string) { return s.charAt(0).toUpperCase() + s.slice(1) }
+
 export default function ItemCard({
   item,
   projectId,
@@ -13,6 +15,10 @@ export default function ItemCard({
   const [ask, setAsk] = useState(false)
   const del = useDeleteItem(projectId)
 
+  const rawTags = Array.isArray(item.tags) ? item.tags.filter(Boolean) as string[] : []
+  const priority = rawTags.find(t => ['high','medium','low'].includes(t.toLowerCase()))
+  const otherTags = rawTags.filter(t => t.trim() && t.toLowerCase() !== (priority || '').toLowerCase())
+
   function open() {
     if (onOpen) onOpen(item)
   }
@@ -20,13 +26,8 @@ export default function ItemCard({
     e.stopPropagation()
     setAsk(true)
   }
-  function cancel() {
-    setAsk(false)
-  }
-  function confirm() {
-    del.mutate(item.id)
-    setAsk(false)
-  }
+  function cancel() { setAsk(false) }
+  function confirm() { del.mutate(item.id); setAsk(false) }
 
   return (
     <>
@@ -35,9 +36,13 @@ export default function ItemCard({
           <span>{item.title}</span>
           <button className="btn btn-danger" style={{padding:'4px 8px', fontSize:12}} onClick={requestDelete}>Delete</button>
         </div>
-        {Array.isArray(item.tags) && item.tags.length > 0 && (
+
+        {(priority || otherTags.length > 0) && (
           <div className="card-tags">
-            {item.tags.map((t, i) => (
+            {priority && (
+              <span className={`badge priority-${priority.toLowerCase()}`}>{cap(priority)}</span>
+            )}
+            {otherTags.map((t, i) => (
               <span key={i} className="badge">{t}</span>
             ))}
           </div>
