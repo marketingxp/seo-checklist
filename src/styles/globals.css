@@ -184,3 +184,13 @@ a:hover { text-decoration: underline; }
 .card-pad::-webkit-scrollbar-track { background: var(--column-bg); border-radius: 0 var(--radius-lg) var(--radius-lg) 0; }
 .card-pad::-webkit-scrollbar-thumb { background: #a1bdd914; border-radius: 5px; border: 2px solid var(--card-bg); }
 .card-pad::-webkit-scrollbar-thumb:hover { background: #a6c5e229; }
+
+/* Priority chips */
+.badge.priority-high   { background: var(--blocked); color:#fff; }
+.badge.priority-medium { background: var(--warn);    color:#1d2125; }
+.badge.priority-low    { background: var(--ok);      color:#1d2125; }
+
+/* Priority chips */
+.badge.priority-high   { background: var(--blocked); color:#fff; }
+.badge.priority-medium { background: var(--warn);    color:#1d2125; }
+.badge.priority-low    { background: var(--ok);      color:#1d2125; }

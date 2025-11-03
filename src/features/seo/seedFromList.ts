@@ -8,9 +8,9 @@ type SeedItem = {
   notes: string
 }
 
-const P0 = 'P0 — Pre-launch MUST-FIX (today)'
-const P1 = 'P1 — Launch window (+72h)'
-const P2 = 'P2 — First 30 days'
+const HIGH   = 'High'
+const MEDIUM = 'Medium'
+const LOW    = 'Low'
 
 function N(lines: string[]): string { return lines.join('\n') }
 
@@ -18,7 +18,7 @@ export const tasks: SeedItem[] = [
   // P0
   {
     title: 'Block staging from indexation',
-    tags: [P0, 'Indexation'],
+    tags: [HIGH, 'Indexation'],
     notes: N([
       'Owner: Dev FE / Ops',
       'Why: If staging is indexable, Google can index duplicate pages and confuse rankings.',
@@ -32,7 +32,7 @@ export const tasks: SeedItem[] = [
   },
   {
     title: 'Self-canonicals on staging (switch to prod at launch)',
-    tags: [P0, 'Canonicals'],
+    tags: [HIGH, 'Canonicals'],
     notes: N([
       'Owner: Dev FE',
       'Why: Self-canonicals avoid duplicate signals and make the main URL explicit.',
@@ -45,7 +45,7 @@ export const tasks: SeedItem[] = [
   },
   {
     title: 'Kill cross-environment links on staging',
-    tags: [P0, 'Internal Linking'],
+    tags: [HIGH, 'Internal Linking'],
     notes: N([
       'Owner: Dev FE',
       'Why: Links to production from staging leak crawls and break QA.',
@@ -57,7 +57,7 @@ export const tasks: SeedItem[] = [
   },
   {
     title: 'Fix Mini page metadata (Title/H1)',
-    tags: [P0, 'Metadata'],
+    tags: [HIGH, 'Metadata'],
     notes: N([
       'Owner: Dev FE / Content',
       'Why: Incorrect Title/H1 (e.g., 4D title leaking onto Mini) misleads Google and users.',
@@ -69,7 +69,7 @@ export const tasks: SeedItem[] = [
   },
   {
     title: 'Prep production XML sitemaps (no staging sitemaps exposed)',
-    tags: [P0, 'Sitemaps'],
+    tags: [HIGH, 'Sitemaps'],
     notes: N([
       'Owner: SEO / Dev BE',
       'Why: Clean sitemaps allow fast discovery of canonical, indexable URLs.',
@@ -84,7 +84,7 @@ export const tasks: SeedItem[] = [
   // P1
   {
     title: 'Decommission staging host',
-    tags: [P1, 'Environments'],
+    tags: [MEDIUM, 'Environments'],
     notes: N([
       'Owner: Ops',
       'Why: After launch, staging should no longer be publicly reachable for users/crawlers.',
@@ -96,7 +96,7 @@ export const tasks: SeedItem[] = [
   },
   {
     title: 'Remove legacy “private plates” content',
-    tags: [P1, 'Content'],
+    tags: [MEDIUM, 'Content'],
     notes: N([
       'Owner: Content / SEO',
       'Why: Marketplace-style content confuses Google; you are a manufacturer.',
@@ -108,7 +108,7 @@ export const tasks: SeedItem[] = [
   },
   {
     title: 'Add social meta + FAQ schema',
-    tags: [P1, 'Social & Schema'],
+    tags: [MEDIUM, 'Social & Schema'],
     notes: N([
       'Owner: Dev FE / Content',
       'Why: Social previews drive CTR; FAQ schema can produce rich results.',
@@ -120,7 +120,7 @@ export const tasks: SeedItem[] = [
   },
   {
     title: 'Harden headers & caching',
-    tags: [P1, 'Security & Ops'],
+    tags: [MEDIUM, 'Security & Ops'],
     notes: N([
       'Owner: Ops',
       'Why: Security best practice and performance for repeat views.',
@@ -135,7 +135,7 @@ export const tasks: SeedItem[] = [
   // P2
   {
     title: 'Performance hardening (LCP/INP/CLS)',
-    tags: [P2, 'Performance'],
+    tags: [LOW, 'Performance'],
     notes: N([
       'Owner: Dev FE',
       'Why: Faster UX improves rankings and conversions.',
@@ -148,7 +148,7 @@ export const tasks: SeedItem[] = [
   },
   {
     title: 'Expand model/manufacturer pages',
-    tags: [P2, 'Content'],
+    tags: [LOW, 'Content'],
     notes: N([
       'Owner: Content',
       'Why: Stronger intent coverage lifts rankings and conversion.',
@@ -160,7 +160,7 @@ export const tasks: SeedItem[] = [
   },
   {
     title: 'Publish a compliance hub',
-    tags: [P2, 'Content / Compliance'],
+    tags: [LOW, 'Content / Compliance'],
     notes: N([
       'Owner: Content / SEO',
       'Why: Central source of truth builds trust and earns long-tail.',
@@ -174,7 +174,7 @@ export const tasks: SeedItem[] = [
   // Redirects & canonicals
   {
     title: 'Redirect map live',
-    tags: [P1, 'Redirects'],
+    tags: [MEDIUM, 'Redirects'],
     notes: N([
       'Owner: SEO / Dev',
       'Why: Consolidate signals and avoid broken journeys.',
@@ -186,7 +186,7 @@ export const tasks: SeedItem[] = [
   },
   {
     title: 'Parameter policy & canonicals',
-    tags: [P1, 'Canonicals'],
+    tags: [MEDIUM, 'Canonicals'],
     notes: N([
       'Owner: Dev / SEO',
       'Why: Prevent parameter pages and trackers from polluting the index.',
@@ -201,7 +201,7 @@ export const tasks: SeedItem[] = [
   // Structured data
   {
     title: 'Structured data (sitewide)',
-    tags: [P1, 'Schema'],
+    tags: [MEDIUM, 'Schema'],
     notes: N([
       'Owner: Dev FE / SEO',
       'Why: Help search engines understand the site and enable enhancements.',
@@ -213,7 +213,7 @@ export const tasks: SeedItem[] = [
   },
   {
     title: 'Structured data (FAQs)',
-    tags: [P1, 'Schema'],
+    tags: [MEDIUM, 'Schema'],
     notes: N([
       'Owner: Dev FE / SEO',
       'Why: FAQ rich results can boost SERP real estate.',
@@ -225,7 +225,7 @@ export const tasks: SeedItem[] = [
   },
   {
     title: 'Structured data (Product where appropriate)',
-    tags: [P2, 'Schema'],
+    tags: [LOW, 'Schema'],
     notes: N([
       'Owner: Dev FE / SEO',
       'Why: If plate products/configurator show price/availability, Product schema can enhance snippets.',
@@ -239,7 +239,7 @@ export const tasks: SeedItem[] = [
   // Social/Open Graph
   {
     title: 'Social/Open Graph template defaults',
-    tags: [P1, 'Social'],
+    tags: [MEDIUM, 'Social'],
     notes: N([
       'Owner: Dev FE / Content',
       'Why: Correct previews increase sharing CTR.',
@@ -252,7 +252,7 @@ export const tasks: SeedItem[] = [
   // Error states
   {
     title: '404 / 410 error states',
-    tags: [P1, 'Errors'],
+    tags: [MEDIUM, 'Errors'],
     notes: N([
       'Owner: Dev FE',
       'Why: Good error UX keeps users on site; correct status codes guide Google.',
@@ -266,7 +266,7 @@ export const tasks: SeedItem[] = [
   // QA checklist
   {
     title: 'QA — template pass/fail checks',
-    tags: [P1, 'QA'],
+    tags: [MEDIUM, 'QA'],
     notes: N([
       'Owner: SEO / Dev FE',
       'Why: Prevents last-minute regressions.',
@@ -286,7 +286,7 @@ export const tasks: SeedItem[] = [
   // Measurement & tooling
   {
     title: 'Measurement & tooling setup',
-    tags: [P1, 'Analytics'],
+    tags: [MEDIUM, 'Analytics'],
     notes: N([
       'Owner: SEO / Dev',
       'Why: You need proof that organic traffic converts.',
