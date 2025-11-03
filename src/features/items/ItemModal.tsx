@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useDeleteItem, useUpdateItem, Item } from './api'
 
+function derivePriority(tags: string[] = []): 'low'|'medium'|'high' {
+  const lower = tags.map(t => String(t).toLowerCase())
+  if (lower.some(t => /^p0/.test(t) || /^p1/.test(t) || t === 'high')) return 'high'
+  if (lower.some(t => /^p2/.test(t) || t === 'medium')) return 'medium'
+  return 'low'
+}
+
 export default function ItemModal({
   open,
   onClose,
@@ -13,12 +20,7 @@ export default function ItemModal({
   item: Item
 }) {
   const [title, setTitle] = useState(item.title)
-  const [priority, setPriority] = useState<'low'|'medium'|'high'>(() => {
-    const t = (item.tags || []).map(x => x.toLowerCase())
-    if (t.includes('high')) return 'high'
-    if (t.includes('medium')) return 'medium'
-    return 'low'
-  })
+  const [priority, setPriority] = useState<'low'|'medium'|'high'>(derivePriority(item.tags as any))
   const [notes, setNotes] = useState(item.notes ?? '')
   const [confirmDelete, setConfirmDelete] = useState(false)
   const update = useUpdateItem(projectId)
@@ -27,14 +29,14 @@ export default function ItemModal({
   useEffect(() => {
     setTitle(item.title)
     setNotes(item.notes ?? '')
-    const t = (item.tags || []).map(x => x.toLowerCase())
-    setPriority(t.includes('high') ? 'high' : t.includes('medium') ? 'medium' : 'low')
+    setPriority(derivePriority(item.tags as any))
     setConfirmDelete(false)
   }, [item])
 
   function save() {
-    const rest = (item.tags || []).filter(t => !['low','medium','high'].includes(t.toLowerCase()))
-    const tags = Array.from(new Set([priority, ...rest]))
+    const raw = Array.isArray(item.tags) ? item.tags.filter(Boolean) as string[] : []
+    const others = raw.filter(t => !/^p[0-3]/i.test(String(t)) && !['low','medium','high'].includes(String(t).toLowerCase()))
+    const tags = Array.from(new Set([priority, ...others]))
     update.mutate({ id: item.id, title, notes, tags })
     onClose()
   }

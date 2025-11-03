@@ -1,5 +1,12 @@
 import type { Item } from './api'
 
+function derivePriority(tags: string[] = []): 'low' | 'medium' | 'high' {
+  const lower = tags.map(t => String(t).toLowerCase())
+  if (lower.some(t => /^p0/.test(t) || /^p1/.test(t) || t === 'high')) return 'high'
+  if (lower.some(t => /^p2/.test(t) || t === 'medium')) return 'medium'
+  return 'low' // default or P3/none
+}
+
 export default function ItemCard({
   item,
   onOpen,
@@ -16,8 +23,9 @@ export default function ItemCard({
 }) {
   const { setNodeRef, attributes, listeners, isDragging } = dragProps || {}
   const tags = Array.isArray(item.tags) ? item.tags.filter(Boolean) as string[] : []
-  const pr = tags.find(t => ['high','medium','low'].includes(t.toLowerCase()))
-  const others = tags.filter(t => t.toLowerCase() !== (pr || '').toLowerCase())
+  const priority = derivePriority(tags)
+
+  const displayTags = tags.filter(t => !/^p[0-3]/i.test(String(t))) // hide P0/P1/P2/P3
 
   return (
     <div
@@ -40,12 +48,11 @@ export default function ItemCard({
           title="Drag"
         >⇅</span>
       </div>
-      {(pr || others.length>0) && (
-        <div className="card-tags" style={{textAlign:'left'}}>
-          {pr && <span className={`badge priority-${pr.toLowerCase()}`}>{pr[0].toUpperCase()+pr.slice(1)}</span>}
-          {others.map((t,i)=><span key={i} className="badge">{t}</span>)}
-        </div>
-      )}
+
+      <div className="card-tags" style={{textAlign:'left'}}>
+        <span className={`badge priority-${priority}`}>{priority[0].toUpperCase()+priority.slice(1)}</span>
+        {displayTags.map((t,i)=><span key={i} className="badge">{t}</span>)}
+      </div>
     </div>
   )
 }
