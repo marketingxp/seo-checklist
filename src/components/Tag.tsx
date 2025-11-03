@@ -1,14 +1,10 @@
-type Props = { label: string }
-export default function Tag({ label }: Props) {
-  const v = (label ?? '').trim()
-  if (v === '') return null
-  if (v === 'P0 • Critical') {
-    return (
-      <span
-        className="badge"
-        style={{ borderColor: 'transparent', background: 'transparent', color: 'rgb(34, 197, 94)' }}
-      > </span>
-    )
-  }
+const BLOCK = new Set([
+  'P0 • Critical',
+  'P1 • High',
+  'P2 • Medium',
+  'P3 • Low'
+])
+export default function Tag({ label }: { label: string }) {
+  if (!label || BLOCK.has(label.trim())) return null
   return <span className="badge">{label}</span>
 }
