@@ -23,7 +23,7 @@ function SortableCard({item,onOpen}:{item:Item;onOpen:()=>void}){
   const style = { transform: CSS.Transform.toString(transform), transition, cursor:'grab' as const }
   return (
     <div ref={setNodeRef} style={style} className={isDragging?'dragging':''} {...attributes} {...listeners}>
-      <ItemCard item={item} onOpen={onOpen}/>
+      <ItemCard item={item} onOpen={onOpen} projectId={projectId} projectId={projectId} />
     </div>
   )
 }
@@ -121,7 +121,7 @@ export default function KanbanBoard({ projectId, items }: { projectId: string; i
             )
           })}
         </div>
-        <DragOverlay>{activeItem ? <ItemCard item={activeItem}/> : null}</DragOverlay>
+        <DragOverlay>{activeItem ? <ItemCard item={activeItem} projectId={projectId} /> : null}</DragOverlay>
       </DndContext>
 
       <ItemDialog

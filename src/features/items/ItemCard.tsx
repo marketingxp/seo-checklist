@@ -1,18 +1,61 @@
-import type { Item } from './api'
-import { getPriority, prioColors } from './priority'
-export default function ItemCard({item,onOpen}:{item:Item;onOpen?:()=>void}){
-  const p = getPriority(item.tags)
+import { useState } from 'react'
+import { Item, useDeleteItem } from './api'
+
+export default function ItemCard({
+  item,
+  projectId,
+  onOpen
+}: {
+  item: Item
+  projectId: string
+  onOpen?: (it: Item) => void
+}) {
+  const [ask, setAsk] = useState(false)
+  const del = useDeleteItem(projectId)
+
+  function open() {
+    if (onOpen) onOpen(item)
+  }
+  function requestDelete(e: React.MouseEvent) {
+    e.stopPropagation()
+    setAsk(true)
+  }
+  function cancel() {
+    setAsk(false)
+  }
+  function confirm() {
+    del.mutate(item.id)
+    setAsk(false)
+  }
+
   return (
-    <button onClick={onOpen} className="card" style={{textAlign:'left',borderColor:'var(--border)'}}>
-      <div className="card-title" style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:8}}>
-        <span>{item.title}</span>
-        <span className="badge" style={{borderColor:'transparent',background:'transparent',color:prioColors[p]}}>● {p}</span>
+    <>
+      <div className="card" onClick={open}>
+        <div className="card-title" style={{display:'flex', alignItems:'center', justifyContent:'space-between', gap:8}}>
+          <span>{item.title}</span>
+          <button className="btn btn-danger" style={{padding:'4px 8px', fontSize:12}} onClick={requestDelete}>Delete</button>
+        </div>
+        {Array.isArray(item.tags) && item.tags.length > 0 && (
+          <div className="card-tags">
+            {item.tags.map((t, i) => (
+              <span key={i} className="badge">{t}</span>
+            ))}
+          </div>
+        )}
       </div>
-      {Array.isArray(item.tags)&&item.tags.filter(t=>!t.startsWith('prio:')).length>0&&(
-        <div className="card-tags">
-          {item.tags.filter(t=>!t.startsWith('prio:')).map(t=> <span key={t} className="badge">{t}</span>)}
+
+      {ask && (
+        <div style={{position:'fixed', inset:0, display:'grid', placeItems:'center', background:'rgba(0,0,0,.5)', zIndex:60}}>
+          <div className="card-pad" style={{ width: 420, maxWidth: '92vw' }}>
+            <h2 style={{margin:0, marginBottom:10}}>Are you sure?</h2>
+            <p className="meta" style={{marginTop:0}}>This will permanently delete the card.</p>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button className="btn" onClick={cancel}>No</button>
+              <button className="btn btn-danger" onClick={confirm}>Yes</button>
+            </div>
+          </div>
         </div>
       )}
-    </button>
+    </>
   )
 }
