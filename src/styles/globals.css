@@ -146,7 +146,7 @@ a:hover { text-decoration: underline }
     transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
     text-align: left;
     width: 100%;
-    margin: 0 0 14px 0;
+    margin: 0 0 10px 0;
     backdrop-filter: blur(8px);
 }
 .task-card:last-child { margin-bottom: 0 }

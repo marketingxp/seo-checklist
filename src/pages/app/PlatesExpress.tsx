@@ -50,9 +50,16 @@ export default function PlatesExpress() {
   return (
     <>
       <div className="header">
-        <div className="header-inner">
-          <div className="brand">Plates Express</div>
-          <div className="kicker">SEO Checklist</div>
+        <div className="header-inner" style={{display:'flex',alignItems:'center',gap:12}}>
+          <img
+            src="https://marketingxp.co.uk/wp-content/uploads/2025/11/platesexpresslogo.avif"
+            alt="Plates Express"
+            style={{height:48, width:'auto', objectFit:'contain'}}
+          />
+          <div>
+            <div className="brand">Plates Express</div>
+            <div className="kicker">SEO Checklist</div>
+          </div>
         </div>
       </div>
       <div className="container">
