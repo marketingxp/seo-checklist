@@ -23,7 +23,7 @@ function SortableCard({item,onOpen}:{item:Item;onOpen:()=>void}){
   const style = { transform: CSS.Transform.toString(transform), transition, cursor:'grab' as const }
   return (
     <div ref={setNodeRef} style={style} className={isDragging?'dragging':''} {...attributes} {...listeners}>
-      <ItemCard item={item} onOpen={onOpen} projectId={projectId} projectId={projectId} />
+      <ItemCard item={item} onOpen={onOpen} projectId={projectId} />
     </div>
   )
 }
