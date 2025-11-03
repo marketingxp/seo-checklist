@@ -194,3 +194,6 @@ a:hover { text-decoration: underline; }
 .badge.priority-high   { background: var(--blocked); color:#fff; }
 .badge.priority-medium { background: var(--warn);    color:#1d2125; }
 .badge.priority-low    { background: var(--ok);      color:#1d2125; }
+
+/* Hide stray priority badge like: <span class="badge" style="... color: rgb(245, 158, 11);">● medium</span> */
+.badge[style*="rgb(245, 158, 11)"] { display: none !important; }
